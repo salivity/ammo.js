@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can Ammo.js Simulate Destructive Environments? - ammo.js</title>
+    <meta name="description" content="This article explores whether the popular JavaScript physics engine, ammo.js, can natively handle destructive environments and fracturing meshes. We will examine the limitations of the library regarding geometry manipulation, look at how breakable constr">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/can-ammo-js-simulate-destructive-environments">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Can Ammo.js Simulate Destructive Environments? - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/can-ammo-js-simulate-destructive-environments" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores whether the popular JavaScript physics engine, ammo.js, can natively handle destructive environments and fracturing meshes. We will examine the limitations of the library regarding geometry manipulation, look at how breakable constr" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="can-ammojs-simulate-destructive-environments">Can Ammo.js
+Simulate Destructive Environments?</h1>
+<p>This article explores whether the popular JavaScript physics engine,
+ammo.js, can natively handle destructive environments and fracturing
+meshes. We will examine the limitations of the library regarding
+geometry manipulation, look at how breakable constraints function within
+the engine, and explain the standard workflows developers use to achieve
+realistic destruction in web-based 3D applications.</p>
+<h2 id="native-capabilities-of-ammojs">Native Capabilities of
+Ammo.js</h2>
+<p>Strictly speaking, ammo.js <strong>cannot</strong> natively fracture
+meshes or procedurally cut 3D geometry. Because ammo.js is a direct
+Emscripten port of the C++ Bullet Physics engine, its primary purpose is
+to calculate rigid body dynamics, collisions, and constraints. It has no
+built-in awareness of a mesh's visual geometry representation (such as
+vertices, faces, and UV maps) in a way that allows it to split a single
+3D model into smaller pieces upon impact.</p>
+<p>Geometry deformation and slicing are rendering-level tasks. To
+achieve destruction, ammo.js must be paired with a 3D rendering library
+(such as Three.js or Babylon.js) that handles the actual splitting of
+the 3D model.</p>
+<h2 id="how-destruction-is-simulated-using-ammojs">How Destruction is
+Simulated Using Ammo.js</h2>
+<p>While ammo.js does not split meshes itself, developers use specific
+techniques to simulate destructive environments using the engine's
+physics calculations.</p>
+<h3 id="1-pre-fractured-meshes-the-common-approach">1. Pre-Fractured
+Meshes (The Common Approach)</h3>
+<p>The most common method for creating destructible environments is
+pre-fracturing.</p>
+<ul>
+<li><strong>Preparation:</strong> A 3D artist fractures a model
+beforehand using software like Blender (using Voronoi destruction
+tools).</li>
+<li><strong>Implementation:</strong> In the web application, these
+fractured pieces are loaded as a single group. Initially, they are
+treated as a single static physics body or kept together using breakable
+joints.</li>
+<li><strong>Trigger:</strong> Upon a high-velocity collision, the static
+body is deactivated, and individual ammo.js rigid bodies are activated
+for each pre-cut piece, allowing them to fall and scatter realistically
+under gravity.</li>
+</ul>
+<h3 id="2-breakable-constraints">2. Breakable Constraints</h3>
+<p>Ammo.js natively supports breakable constraints (joints). You can
+connect multiple rigid bodies using constraints such as
+<code>btFixedConstraint</code> or
+<code>btGeneric6DofConstraint</code>.</p>
+<ul>
+<li>These constraints have an impulse threshold.</li>
+<li>If a collision applies a force that exceeds this threshold, the
+constraint is disabled.</li>
+<li>This allows you to build destructible structures (like a brick wall
+or a bridge) where individual components break apart naturally under
+impact.</li>
+</ul>
+<h3 id="3-dynamic-real-time-slicing">3. Dynamic Real-Time Slicing</h3>
+<p>For games requiring precise, dynamic cuts (like slicing an object at
+the exact point of sword contact), developers combine ammo.js with
+Constructive Solid Geometry (CSG) libraries.</p>
+<ul>
+<li>When a collision is detected, the CSG library mathematically splits
+the visual 3D mesh into two new meshes.</li>
+<li>The original ammo.js rigid body is destroyed.</li>
+<li>Two new ammo.js rigid bodies are generated to match the shapes of
+the newly sliced meshes and are injected back into the physics
+simulation.</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<p>Ammo.js does not natively support mesh fracturing or procedural
+destruction. Instead, it acts as the physics calculator that simulates
+the gravity, velocity, and collisions of fractured pieces after they
+have been split by external 3D modeling tools or runtime geometry
+scripts.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

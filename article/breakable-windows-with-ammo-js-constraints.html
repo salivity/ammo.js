@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breakable Windows with Ammo.js Constraints - ammo.js</title>
+    <meta name="description" content="This article explains how to implement a realistic, breakable glass window using fractured physics shards and Ammo.js constraints. You will learn how to structure the fractured meshes, connect them using rigid body constraints, and dynamically break thos">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/breakable-windows-with-ammo-js-constraints">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Breakable Windows with Ammo.js Constraints - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/breakable-windows-with-ammo-js-constraints" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to implement a realistic, breakable glass window using fractured physics shards and Ammo.js constraints. You will learn how to structure the fractured meshes, connect them using rigid body constraints, and dynamically break thos" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="breakable-windows-with-ammojs-constraints">Breakable Windows
+with Ammo.js Constraints</h1>
+<p>This article explains how to implement a realistic, breakable glass
+window using fractured physics shards and Ammo.js constraints. You will
+learn how to structure the fractured meshes, connect them using rigid
+body constraints, and dynamically break those connections upon impact to
+simulate shattering glass.</p>
+<h2 id="step-1-pre-fracturing-the-window-mesh">Step 1: Pre-Fracturing
+the Window Mesh</h2>
+<p>To create a breakable window, you cannot use a single, solid 3D
+block. Instead, you must pre-fracture the window geometry into
+individual shards.</p>
+<p>This is typically done in a 3D modeling tool like Blender using
+Voronoi cell fracturing, or programmatically at runtime. The result
+should be a collection of adjacent, interlocking 3D meshes that
+perfectly fit together to form the complete window pane.</p>
+<h2 id="step-2-creating-ammojs-rigid-bodies-for-shards">Step 2: Creating
+Ammo.js Rigid Bodies for Shards</h2>
+<p>Each individual shard must be represented as a dynamic rigid body in
+Ammo.js so they can fall and collide after the window breaks.</p>
+<ol type="1">
+<li><strong>Shape Creation</strong>: Use <code>btConvexHullShape</code>
+to represent the collision volume of each shard. Loop through the
+vertices of each fractured mesh and add them to the shape.</li>
+<li><strong>Rigid Body Setup</strong>: Create a <code>btRigidBody</code>
+for each shard. Set their mass based on their volume to maintain
+physical accuracy.</li>
+<li><strong>Collision Margins</strong>: Set a very low collision margin
+(e.g., <code>0.01</code> or <code>0.001</code>) on the shapes to prevent
+the shards from pushing each other apart when the physics simulation
+starts.</li>
+</ol>
+<h2 id="step-3-binding-shards-with-constraints">Step 3: Binding Shards
+with Constraints</h2>
+<p>To keep the window intact before an impact, you must lock the
+adjacent shards together using rigid body constraints.</p>
+<ol type="1">
+<li><strong>Find Neighboring Shards</strong>: Determine which shards are
+touching. You can do this by checking the proximity of their bounding
+boxes or analyzing shared vertices.</li>
+<li><strong>Apply Fixed Constraints</strong>: For every pair of touching
+shards, create a <code>btFixedConstraint</code> (or a
+<code>btGeneric6DofConstraint</code> with all translational and
+rotational axes locked).</li>
+<li><strong>Anchor Points</strong>: Set the constraint's transform
+helper frames at the contact point between the two shards.</li>
+<li><strong>Add to World</strong>: Add these constraints to your Ammo.js
+physics world using
+<code>physicsWorld.addConstraint(constraint, true)</code>. The second
+argument disables collisions between the linked shards to prevent
+jittering.</li>
+</ol>
+<p>To keep the entire window in its frame, create static rigid bodies
+for the window frame and constrain the outer edge shards of the glass to
+those static bodies.</p>
+<h2 id="step-4-detecting-impacts-and-breaking-constraints">Step 4:
+Detecting Impacts and Breaking Constraints</h2>
+<p>To make the window break, you must monitor collisions and destroy the
+constraints when a threshold force is exceeded.</p>
+<h3 id="collision-detection">Collision Detection</h3>
+<p>Implement a collision callback or iterate through the physics world's
+contact manifolds during your physics update loop:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dispatcher <span class="op">=</span> physicsWorld<span class="op">.</span><span class="fu">getDispatcher</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> numManifolds <span class="op">=</span> dispatcher<span class="op">.</span><span class="fu">getNumManifolds</span>()<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> numManifolds<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> manifold <span class="op">=</span> dispatcher<span class="op">.</span><span class="fu">getManifoldByIndexInternal</span>(i)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> body0 <span class="op">=</span> Ammo<span class="op">.</span><span class="fu">castObject</span>(manifold<span class="op">.</span><span class="fu">getBody0</span>()<span class="op">,</span> Ammo<span class="op">.</span><span class="at">btRigidBody</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> body1 <span class="op">=</span> Ammo<span class="op">.</span><span class="fu">castObject</span>(manifold<span class="op">.</span><span class="fu">getBody1</span>()<span class="op">,</span> Ammo<span class="op">.</span><span class="at">btRigidBody</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> numContacts <span class="op">=</span> manifold<span class="op">.</span><span class="fu">getNumContacts</span>()<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> numContacts<span class="op">;</span> j<span class="op">++</span>) {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> pt <span class="op">=</span> manifold<span class="op">.</span><span class="fu">getContactPoint</span>(j)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> impulse <span class="op">=</span> pt<span class="op">.</span><span class="fu">getAppliedImpulse</span>()<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check if the collision force exceeds the breaking threshold</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (impulse <span class="op">&gt;</span> BREAKING_THRESHOLD) {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>            <span class="fu">breakConstraintsBetween</span>(body0<span class="op">,</span> body1)<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="breaking-the-constraints">Breaking the Constraints</h3>
+<p>When the threshold is exceeded:</p>
+<ol type="1">
+<li>Identify the constraints connecting the two colliding bodies (or
+constraints connecting those bodies to their neighbors).</li>
+<li>Remove the identified constraints from the physics world using
+<code>physicsWorld.removeConstraint(constraint)</code>.</li>
+<li>Delete the constraint from memory using
+<code>Ammo.destroy(constraint)</code>.</li>
+</ol>
+<p>Once the constraints are removed, the affected shards will
+immediately respond to gravity and external forces, falling away from
+the window pane while the unbroken parts of the window remain held
+together by their surviving constraints.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

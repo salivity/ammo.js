@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Collision Margin and Stacked Bodies - ammo.js</title>
+    <meta name="description" content="This article explains how the collision margin in ammo.js (the JavaScript port of the Bullet physics engine) impacts the stability, alignment, and resting contact of stacked rigid bodies. You will learn how the collision margin creates a virtual boundary">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-collision-margin-and-stacked-bodies">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Collision Margin and Stacked Bodies - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-collision-margin-and-stacked-bodies" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how the collision margin in ammo.js (the JavaScript port of the Bullet physics engine) impacts the stability, alignment, and resting contact of stacked rigid bodies. You will learn how the collision margin creates a virtual boundary" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-collision-margin-and-stacked-bodies">Ammo.js Collision
+Margin and Stacked Bodies</h1>
+<p>This article explains how the collision margin in ammo.js (the
+JavaScript port of the Bullet physics engine) impacts the stability,
+alignment, and resting contact of stacked rigid bodies. You will learn
+how the collision margin creates a virtual boundary around shapes, how
+it prevents interpenetration, and how to configure it to avoid visual
+gaps or physical jitter in your 3D physics simulations.</p>
+<h2 id="what-is-collision-margin-in-ammojs">What is Collision Margin in
+Ammo.js?</h2>
+<p>In ammo.js, the collision margin is a small, protective buffer zone
+added around collision shapes. Instead of calculating collisions exactly
+at the polygon surface, the physics engine uses this margin to detect
+and resolve contacts before the core geometries actually intersect. By
+default, Bullet/ammo.js sets this margin to 0.04 units.</p>
+<p>For some shapes, like spheres and capsules, the margin is "internal"
+(subtracted from the total size), meaning the physical dimensions match
+the graphical representation. For other shapes, like boxes and convex
+hulls, the margin is "external" (added to the exterior), expanding the
+physical collision boundary slightly beyond the original geometry
+dimensions.</p>
+<h2 id="effect-on-resting-contact-and-visual-gaps">Effect on Resting
+Contact and Visual Gaps</h2>
+<p>When rigid bodies are stacked, they rely on resting contact to remain
+stable. The collision margin directly dictates where this resting
+contact occurs:</p>
+<ul>
+<li><strong>Floating Appearance (Visual Gaps):</strong> Because the
+collision boundary of an externally margined shape (like a box) is
+expanded, two stacked boxes will come to rest on their margin boundaries
+rather than their actual polygon faces. This creates a visible gap
+between the stacked objects.</li>
+<li><strong>Mesh Penetration:</strong> If you attempt to completely
+remove the margin (setting it to 0) to eliminate the visual gap, you
+remove the engine's buffer. The stacked bodies will likely penetrate
+each other's actual geometry before a collision is registered, resulting
+in constant micro-collisions as the engine tries to push them
+apart.</li>
+</ul>
+<h2 id="impact-on-stack-stability-and-jitter">Impact on Stack Stability
+and Jitter</h2>
+<p>Stacking multiple bodies increases the cumulative mass and force
+acting on the bottom-most contacts. The collision margin plays a vital
+role in maintaining stack stability:</p>
+<ul>
+<li><strong>Preventing Explosive Separation:</strong> Without a
+sufficient collision margin, deep interpenetration occurs during heavy
+loads. When the engine detects deep penetration, it applies a large
+corrective force to separate the bodies. In a stack, this corrective
+force propagates upward, causing the entire stack to jitter, wobble, or
+violently explode.</li>
+<li><strong>Smoother Constraint Resolution:</strong> The margin allows
+ammo.js to generate contact manifolds early. This predictive collision
+detection ensures that corrective forces are applied gradually, keeping
+resting contacts quiet and stable even under heavy stacking loads.</li>
+</ul>
+<h2 id="how-to-optimize-margins-for-stacking">How to Optimize Margins
+for Stacking</h2>
+<p>To achieve stable stacks without unsightly visual gaps, you can apply
+the following techniques:</p>
+<ol type="1">
+<li><strong>Shrink the Graphical Mesh:</strong> If you must use a
+standard collision margin for stability, shrink your visual 3D mesh
+slightly so that it matches the inner boundary of the collision shape,
+masking the visual gap.</li>
+<li><strong>Adjust the Margin Judiciously:</strong> For small-scale
+objects, the default 0.04 margin might be too large. You can lower the
+margin using <code>shape.setMargin(0.01)</code>, but avoid setting it to
+absolute zero.</li>
+<li><strong>Use Implicit Margin Shapes:</strong> Whenever possible, use
+spheres, capsules, or cylinders for stacked components. Because their
+margins are embedded internally, they transition into resting contact
+seamlessly without creating external visual gaps.</li>
+</ol></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

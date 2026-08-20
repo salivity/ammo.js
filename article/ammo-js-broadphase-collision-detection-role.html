@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Broadphase Collision Detection Role - ammo.js</title>
+    <meta name="description" content="This article explains the critical role of the broadphase collision detection phase within the ammo.js physics engine. It explores how this initial filtering step optimizes performance in WebGL and 3D web applications by quickly identifying potential col">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-broadphase-collision-detection-role">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Broadphase Collision Detection Role - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-broadphase-collision-detection-role" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the critical role of the broadphase collision detection phase within the ammo.js physics engine. It explores how this initial filtering step optimizes performance in WebGL and 3D web applications by quickly identifying potential col" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-broadphase-collision-detection-role">Ammo.js Broadphase
+Collision Detection Role</h1>
+<p>This article explains the critical role of the broadphase collision
+detection phase within the ammo.js physics engine. It explores how this
+initial filtering step optimizes performance in WebGL and 3D web
+applications by quickly identifying potential colliding pairs using
+simple bounding volumes, thereby saving valuable computational resources
+before the resource-intensive narrowphase checks begin.</p>
+<h2 id="the-collision-detection-challenge">The Collision Detection
+Challenge</h2>
+<p>In any 3D physics simulation, detecting collisions between objects is
+one of the most computationally expensive tasks. If a scene contains
+<span class="math inline">\(N\)</span> active physical bodies, a naive
+approach would compare every single object against every other object to
+check for intersections. This results in an <span
+class="math inline">\(O(N^2)\)</span> time complexity.</p>
+<p>For a simulation with hundreds or thousands of objects, performing
+precise shape-to-shape collision math (like sphere-to-box or
+mesh-to-mesh) on every possible pair in every frame would immediately
+crash the frame rate of a web browser. Ammo.js, which is a direct
+Emscripten port of the C++ Bullet Physics engine, solves this problem by
+dividing collision detection into two distinct phases:
+<strong>Broadphase</strong> and <strong>Narrowphase</strong>.</p>
+<h2 id="the-specific-role-of-the-broadphase">The Specific Role of the
+Broadphase</h2>
+<p>The primary role of the broadphase phase in ammo.js is <strong>rapid
+elimination</strong>. Instead of determining exactly where and how
+objects collide, the broadphase quickly determines which pairs of
+objects have absolutely no chance of colliding.</p>
+<p>By filtering out these non-colliding pairs early, the broadphase
+ensures that the expensive, mathematically precise algorithms in the
+narrowphase are only executed on a tiny fraction of the total object
+pairs.</p>
+<h3 id="how-broadphase-works">How Broadphase Works</h3>
+<ol type="1">
+<li><strong>Axis-Aligned Bounding Boxes (AABBs):</strong> The broadphase
+simplifies the complex geometry of every rigid body in the simulation
+into a simple Axis-Aligned Bounding Box (AABB). An AABB is a simple box
+aligned with the coordinate axes that completely encloses the 3D
+shape.</li>
+<li><strong>Fast Overlap Testing:</strong> Comparing two AABBs for
+intersection requires only a few basic inequality checks, which are
+incredibly fast for a CPU to compute.</li>
+<li><strong>Generating the Pair Cache:</strong> If two AABBs overlap,
+the broadphase flags them as a "potential collision" and adds them to a
+list of overlapping pairs (the dispatcher's pair cache). If the AABBs do
+not overlap, the pair is completely ignored for the rest of the physics
+frame.</li>
+</ol>
+<h2 id="broadphase-algorithms-in-ammojs">Broadphase Algorithms in
+Ammo.js</h2>
+<p>Ammo.js provides different broadphase implementations, each suited
+for different types of simulation environments:</p>
+<ul>
+<li><strong><code>btDbvtBroadphase</code> (Dynamic Bounding Volume
+Tree):</strong> This is the default and most commonly used broadphase in
+ammo.js. It uses a dynamic AABB tree hierarchy. It is highly optimized
+for dynamic environments where objects are constantly moving, entering,
+and leaving the scene, as it dynamically rebuilds and balances the tree
+structure.</li>
+<li><strong><code>btAxisSweep3</code> / <code>bt32BitAxisSweep3</code>
+(Sweep and Prune):</strong> This algorithm sorts the min and max bounds
+of the AABBs along the X, Y, and Z axes. It is highly efficient for
+scenes where objects are relatively static or move predictably, but it
+requires a predefined world boundary. If an object moves outside of
+these predefined boundaries, it can cause errors or performance
+drops.</li>
+</ul>
+<h2 id="transition-to-narrowphase">Transition to Narrowphase</h2>
+<p>Once the broadphase phase is complete, it hands over the filtered
+list of "overlapping pairs" to the narrowphase. The narrowphase then
+performs the exact geometric calculations (using algorithms like GJK and
+EPA) to determine the exact contact points, penetration depth, and
+collision normals required to resolve the physics forces.</p>
+<p>Without the broadphase acting as a high-speed gatekeeper, real-time
+physics simulation in browser-based environments using ammo.js would not
+be viable.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

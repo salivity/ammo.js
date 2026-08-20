@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Max Slope Angle in Ammo.js Character Controller - ammo.js</title>
+    <meta name="description" content="This article explains how to configure the maximum slope angle a character can climb when using the btKinematicCharacterController in the ammo.js physics engine. You will learn the specific API method required, how to convert your target angle into the c">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/set-max-slope-angle-in-ammo-js-character-controller">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Set Max Slope Angle in Ammo.js Character Controller - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/set-max-slope-angle-in-ammo-js-character-controller" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to configure the maximum slope angle a character can climb when using the btKinematicCharacterController in the ammo.js physics engine. You will learn the specific API method required, how to convert your target angle into the c" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="set-max-slope-angle-in-ammojs-character-controller">Set Max
+Slope Angle in Ammo.js Character Controller</h1>
+<p>This article explains how to configure the maximum slope angle a
+character can climb when using the
+<code>btKinematicCharacterController</code> in the ammo.js physics
+engine. You will learn the specific API method required, how to convert
+your target angle into the correct unit, and how to implement this in
+your JavaScript code.</p>
+<p>To set the maximum slope angle that a
+<code>btKinematicCharacterController</code> can walk up, you must use
+the <code>setMaxSlope</code> method. This method defines the limit of
+the incline angle; any slope steeper than this limit will prevent the
+character controller from climbing and cause it to slide down or
+stop.</p>
+<h3 id="the-setmaxslope-method">The setMaxSlope Method</h3>
+<p>The <code>setMaxSlope</code> method accepts a single argument of type
+<code>btScalar</code> (a float), representing the angle in
+<strong>radians</strong>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>characterController<span class="op">.</span><span class="fu">setMaxSlope</span>(slopeRadians)<span class="op">;</span></span></code></pre></div>
+<h3 id="step-by-step-implementation">Step-by-Step Implementation</h3>
+<p>Because the method requires radians, you will typically need to
+convert your desired angle from degrees to radians before passing it to
+the controller.</p>
+<h4 id="1-convert-degrees-to-radians">1. Convert Degrees to Radians</h4>
+<p>To convert degrees to radians, use the standard mathematical formula:
+<span class="math display">\[\text{Radians} = \text{Degrees} \times
+\frac{\pi}{180}\]</span></p>
+<p>In JavaScript, this is written as:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxSlopeDegrees <span class="op">=</span> <span class="fl">45.0</span><span class="op">;</span> <span class="co">// Desired maximum climb angle</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxSlopeRadians <span class="op">=</span> maxSlopeDegrees <span class="op">*</span> (<span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">180</span>)<span class="op">;</span></span></code></pre></div>
+<h4 id="2-apply-to-the-controller">2. Apply to the Controller</h4>
+<p>Pass the calculated radian value to your instance of
+<code>btKinematicCharacterController</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Assuming &#39;characterController&#39; is your active Ammo.btKinematicCharacterController instance</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>characterController<span class="op">.</span><span class="fu">setMaxSlope</span>(maxSlopeRadians)<span class="op">;</span></span></code></pre></div>
+<h3 id="complete-code-example">Complete Code Example</h3>
+<p>Here is how the configuration looks within a typical ammo.js
+initialization setup:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Create the ghost object and shape for the character</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ghostObject <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btPairCachingGhostObject</span>()<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sphereShape <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btSphereShape</span>(<span class="fl">0.5</span>)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Instantiate the kinematic character controller</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> stepHeight <span class="op">=</span> <span class="fl">0.35</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> characterController <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btKinematicCharacterController</span>(</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    ghostObject<span class="op">,</span> </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    sphereShape<span class="op">,</span> </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    stepHeight</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Set the maximum slope angle to 45 degrees</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxSlopeAngleInDegrees <span class="op">=</span> <span class="dv">45</span><span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxSlopeAngleInRadians <span class="op">=</span> maxSlopeAngleInDegrees <span class="op">*</span> (<span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">180</span>)<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>characterController<span class="op">.</span><span class="fu">setMaxSlope</span>(maxSlopeAngleInRadians)<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. (Optional) Verify the setting using the getter method</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> currentMaxSlope <span class="op">=</span> characterController<span class="op">.</span><span class="fu">getMaxSlope</span>()<span class="op">;</span> </span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Max slope in radians: &quot;</span> <span class="op">+</span> currentMaxSlope)<span class="op">;</span></span></code></pre></div>
+<h3 id="expected-behavior">Expected Behavior</h3>
+<ul>
+<li><strong>Slopes under the limit:</strong> The character controller
+will step up the incline smoothly.</li>
+<li><strong>Slopes over the limit:</strong> The character will treat the
+slope as a wall or obstacle, preventing upward movement.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

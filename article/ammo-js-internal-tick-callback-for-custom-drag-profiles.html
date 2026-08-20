@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Internal Tick Callback for Custom Drag Profiles - ammo.js</title>
+    <meta name="description" content="This article explains how to implement custom, velocity-dependent drag profiles on rigid bodies in Ammo.js by leveraging the physics world's internal tick callback. You will learn why this callback is necessary for accurate physics, how to write a custom">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-internal-tick-callback-for-custom-drag-profiles">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Internal Tick Callback for Custom Drag Profiles - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-internal-tick-callback-for-custom-drag-profiles" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to implement custom, velocity-dependent drag profiles on rigid bodies in Ammo.js by leveraging the physics world's internal tick callback. You will learn why this callback is necessary for accurate physics, how to write a custom" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-internal-tick-callback-for-custom-drag-profiles">Ammo.js
+Internal Tick Callback for Custom Drag Profiles</h1>
+<p>This article explains how to implement custom, velocity-dependent
+drag profiles on rigid bodies in Ammo.js by leveraging the physics
+world's internal tick callback. You will learn why this callback is
+necessary for accurate physics, how to write a custom quadratic drag
+formula, and how to register the callback within the WebAssembly
+environment of Ammo.js without causing memory leaks.</p>
+<h2 id="why-use-the-internal-tick-callback">Why Use the Internal Tick
+Callback?</h2>
+<p>Ammo.js (a JavaScript port of the Bullet physics engine) calculates
+physics in small, discrete time intervals called substeps. If you apply
+forces to a rigid body inside your main JavaScript game loop, those
+forces are only applied once per frame. This approach misses the
+internal substeps, leading to inconsistent physics behaviors, frame-rate
+dependency, and jitter.</p>
+<p>By registering a callback via <code>setInternalTickCallback</code>,
+you run your custom drag logic directly before
+(<code>isPreTick = true</code>) or after
+(<code>isPreTick = false</code>) each internal physics simulation
+substep. For applying forces like aerodynamic drag, you must use a
+pre-tick callback so the forces are integrated into the current physics
+step.</p>
+<h2 id="step-1-define-the-drag-logic">Step 1: Define the Drag Logic</h2>
+<p>Standard linear damping in Ammo.js is a simple exponential decay.
+Real-world fluid resistance (drag) is typically quadratic, meaning the
+force increases with the square of the velocity (<span
+class="math inline">\(F_d = \frac{1}{2} \rho v^2 C_d A\)</span>).</p>
+<p>To apply this custom drag, you need to:</p>
+<ol type="1">
+<li>Retrieve the rigid body's current linear velocity.</li>
+<li>Calculate the speed (magnitude of the velocity vector).</li>
+<li>Compute the drag force vector acting in the opposite direction of
+the velocity.</li>
+<li>Apply the resulting force to the body.</li>
+</ol>
+<h2 id="step-2-implement-the-callback-code">Step 2: Implement the
+Callback Code</h2>
+<p>Below is the implementation of the drag calculation inside the
+internal tick callback.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Array to keep track of rigid bodies requiring custom drag profiles</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> activeDragBodies <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">customDragCallback</span>(worldPtr<span class="op">,</span> timeStep) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> activeDragBodies<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> body <span class="op">=</span> activeDragBodies[i]<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Skip calculation if the body is sleeping to save performance</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="op">!</span>body<span class="op">.</span><span class="fu">isActive</span>()) <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> velocity <span class="op">=</span> body<span class="op">.</span><span class="fu">getLinearVelocity</span>()<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> vx <span class="op">=</span> velocity<span class="op">.</span><span class="fu">x</span>()<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> vy <span class="op">=</span> velocity<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> vz <span class="op">=</span> velocity<span class="op">.</span><span class="fu">z</span>()<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> speed <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">sqrt</span>(vx <span class="op">*</span> vx <span class="op">+</span> vy <span class="op">*</span> vy <span class="op">+</span> vz <span class="op">*</span> vz)<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Avoid division by zero for stationary bodies</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (speed <span class="op">&gt;</span> <span class="fl">0.0001</span>) {</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Drag coefficient combining fluid density, drag coefficient, and reference area</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> dragCoeff <span class="op">=</span> body<span class="op">.</span><span class="at">customDragCoeff</span> <span class="op">||</span> <span class="fl">0.47</span><span class="op">;</span> </span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Quadratic drag formula: F = dragCoeff * speed^2</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> dragMagnitude <span class="op">=</span> dragCoeff <span class="op">*</span> speed <span class="op">*</span> speed<span class="op">;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Calculate directional forces (opposite to velocity direction)</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> forceX <span class="op">=</span> <span class="op">-</span>(vx <span class="op">/</span> speed) <span class="op">*</span> dragMagnitude<span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> forceY <span class="op">=</span> <span class="op">-</span>(vy <span class="op">/</span> speed) <span class="op">*</span> dragMagnitude<span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> forceZ <span class="op">=</span> <span class="op">-</span>(vz <span class="op">/</span> speed) <span class="op">*</span> dragMagnitude<span class="op">;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Apply force to the center of mass</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> dragForce <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(forceX<span class="op">,</span> forceY<span class="op">,</span> forceZ)<span class="op">;</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>            body<span class="op">.</span><span class="fu">applyCentralForce</span>(dragForce)<span class="op">;</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Clean up WebAssembly memory allocation</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>            Ammo<span class="op">.</span><span class="fu">destroy</span>(dragForce)<span class="op">;</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="step-3-register-the-callback-with-ammojs">Step 3: Register the
+Callback with Ammo.js</h2>
+<p>Because Ammo.js runs in WebAssembly/C++, you cannot pass a standard
+JavaScript function directly to the engine. You must wrap the JavaScript
+function using <code>Ammo.addFunction</code> to create a functional
+pointer that the WebAssembly runtime can execute.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Wrap the JS function for WebAssembly</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> tickCallbackPointer <span class="op">=</span> Ammo<span class="op">.</span><span class="fu">addFunction</span>(customDragCallback)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Register the callback with the dynamics world</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// The third parameter (true) registers this as a &quot;pre-tick&quot; callback</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">setInternalTickCallback</span>(tickCallbackPointer<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="memory-management-and-performance">Memory Management and
+Performance</h2>
+<p>When implementing custom drag profiles, keep the following
+performance considerations in mind:</p>
+<ul>
+<li><strong>Memory Leaks:</strong> Every temporary vector created using
+<code>new Ammo.btVector3()</code> inside the callback must be explicitly
+destroyed using <code>Ammo.destroy(vector)</code> before the function
+execution scope ends. Failure to do so will quickly crash the browser
+tab due to WebAssembly memory exhaustion.</li>
+<li><strong>Sleeping State:</strong> Always check
+<code>body.isActive()</code>. Applying forces to a resting rigid body
+can inadvertently wake it up, preventing the physics engine from putting
+idle objects to sleep and degrading overall performance.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

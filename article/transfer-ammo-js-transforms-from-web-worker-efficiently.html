@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Ammo.js Transforms From Web Worker Efficiently - ammo.js</title>
+    <meta name="description" content="Running an Ammo.js physics simulation inside a Web Worker keeps the main thread responsive, but transferring high-frequency transform data (position and rotation) back to the main thread for rendering can quickly become a performance bottleneck. The most">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/transfer-ammo-js-transforms-from-web-worker-efficiently">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Transfer Ammo.js Transforms From Web Worker Efficiently - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/transfer-ammo-js-transforms-from-web-worker-efficiently" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Running an Ammo.js physics simulation inside a Web Worker keeps the main thread responsive, but transferring high-frequency transform data (position and rotation) back to the main thread for rendering can quickly become a performance bottleneck. The most" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="transfer-ammojs-transforms-from-web-worker-efficiently">Transfer
+Ammo.js Transforms From Web Worker Efficiently</h1>
+<p>Running an Ammo.js physics simulation inside a Web Worker keeps the
+main thread responsive, but transferring high-frequency transform data
+(position and rotation) back to the main thread for rendering can
+quickly become a performance bottleneck. The most efficient way to
+transfer this data is by writing the transform coordinates into a flat,
+typed float array and passing it back using <strong>Transferable
+Objects</strong> or sharing it directly via a
+<strong>SharedArrayBuffer</strong>. This approach eliminates the heavy
+overhead of structured cloning and object serialization, ensuring 60 FPS
+rendering.</p>
+<hr />
+<h3 id="the-bottleneck-avoid-structured-cloning">The Bottleneck: Avoid
+Structured Cloning</h3>
+<p>By default, sending JavaScript objects via <code>postMessage()</code>
+uses the structured clone algorithm. Copying thousands of individual
+position and quaternion objects from a Web Worker to the main thread
+every frame introduces severe garbage collection overhead and CPU
+latency.</p>
+<p>To achieve maximum efficiency, you must serialize your Ammo.js
+transform data into a single, flat <code>Float32Array</code>.</p>
+<hr />
+<h3 id="method-1-sharedarraybuffer-zero-copy-fastest">Method 1:
+SharedArrayBuffer (Zero-Copy, Fastest)</h3>
+<p>If your hosting environment supports secure contexts (with
+<code>Cross-Origin-Opener-Policy</code> and
+<code>Cross-Origin-Embedder-Policy</code> headers enabled),
+<strong>SharedArrayBuffer</strong> is the absolute fastest method. It
+allows both the Web Worker and the main thread to access the exact same
+memory space without any copying or transferring.</p>
+<h4 id="1-setup-the-shared-buffer">1. Setup the Shared Buffer</h4>
+<p>On the main thread, allocate a shared memory buffer large enough to
+hold the transform data of all your dynamic physics bodies. Each body
+requires 8 floats: 1 for the unique body ID, 3 for position (X, Y, Z),
+and 4 for rotation/quaternion (X, Y, Z, W).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxBodies <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> floatsPerBody <span class="op">=</span> <span class="dv">8</span><span class="op">;</span> <span class="co">// [ID, X, Y, Z, QX, QY, QZ, QW]</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sharedBuffer <span class="op">=</span> <span class="kw">new</span> <span class="bu">SharedArrayBuffer</span>(maxBodies <span class="op">*</span> floatsPerBody <span class="op">*</span> <span class="bu">Float32Array</span><span class="op">.</span><span class="at">BYTES_PER_ELEMENT</span>)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sharedArray <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>(sharedBuffer)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Pass the buffer to the Web Worker during initialization</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>physicsWorker<span class="op">.</span><span class="fu">postMessage</span>({ <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;INIT&#39;</span><span class="op">,</span> <span class="dt">buffer</span><span class="op">:</span> sharedBuffer })<span class="op">;</span></span></code></pre></div>
+<h4 id="2-write-data-in-the-web-worker">2. Write Data in the Web
+Worker</h4>
+<p>Inside the Web Worker, iterate through your active Ammo.js rigid
+bodies, extract their transforms using
+<code>getMotionState().getWorldTransform()</code>, and write them
+directly into the shared array.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Inside Web Worker loop</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> activeBodies<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> body <span class="op">=</span> activeBodies[i]<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    body<span class="op">.</span><span class="fu">getMotionState</span>()<span class="op">.</span><span class="fu">getWorldTransform</span>(tempTransform)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> origin <span class="op">=</span> tempTransform<span class="op">.</span><span class="fu">getOrigin</span>()<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> rotation <span class="op">=</span> tempTransform<span class="op">.</span><span class="fu">getRotation</span>()<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> body<span class="op">.</span><span class="at">userIndex</span><span class="op">;</span> <span class="co">// Unique ID mapped to Main Thread mesh</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> origin<span class="op">.</span><span class="fu">x</span>()<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> origin<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> origin<span class="op">.</span><span class="fu">z</span>()<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> rotation<span class="op">.</span><span class="fu">x</span>()<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> rotation<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> rotation<span class="op">.</span><span class="fu">z</span>()<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    sharedArray[offset<span class="op">++</span>] <span class="op">=</span> rotation<span class="op">.</span><span class="fu">w</span>()<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Notify the main thread that new data is ready</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">postMessage</span>({ <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;TICK&#39;</span><span class="op">,</span> <span class="dt">activeCount</span><span class="op">:</span> activeBodies<span class="op">.</span><span class="at">length</span> })<span class="op">;</span></span></code></pre></div>
+<h4 id="3-read-data-on-the-main-thread">3. Read Data on the Main
+Thread</h4>
+<p>Because the memory is shared, the main thread can instantly read the
+updated coordinates from its local <code>sharedArray</code> reference as
+soon as it receives the 'TICK' signal.</p>
+<hr />
+<h3 id="method-2-transferable-objects-high-compatibility">Method 2:
+Transferable Objects (High Compatibility)</h3>
+<p>If you cannot configure the required COOP/COEP headers for
+<code>SharedArrayBuffer</code>, use <strong>Transferable
+Objects</strong>. Transferring an <code>ArrayBuffer</code> passes
+ownership of the memory instantly from the worker to the main thread.
+This is a zero-copy operation, but it renders the array inaccessible in
+the worker after transfer, requiring you to utilize a double-buffering
+strategy.</p>
+<h4 id="1-web-worker-double-buffering-implementation">1. Web Worker
+Double-Buffering Implementation</h4>
+<p>To avoid reallocating memory every frame, maintain two buffers in the
+worker. While the main thread reads one buffer, the worker writes to the
+other.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> bufferA <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>(maxBodies <span class="op">*</span> <span class="dv">8</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> bufferB <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>(maxBodies <span class="op">*</span> <span class="dv">8</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> currentBuffer <span class="op">=</span> bufferA<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">tickPhysics</span>() {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... Fill currentBuffer with Ammo.js transform data ...</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Transfer ownership of the underlying buffer to the main thread</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">postMessage</span>({ </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;TRANSFORMS&#39;</span><span class="op">,</span> </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">data</span><span class="op">:</span> currentBuffer<span class="op">,</span> </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">count</span><span class="op">:</span> activeCount </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span> [currentBuffer<span class="op">.</span><span class="at">buffer</span>])<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Swap buffers to write to the other one next frame</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    currentBuffer <span class="op">=</span> (currentBuffer <span class="op">===</span> bufferA) <span class="op">?</span> bufferB <span class="op">:</span> bufferA<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Receive the exhausted buffer back from the main thread for reuse</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>self<span class="op">.</span><span class="at">onmessage</span> <span class="op">=</span> <span class="kw">function</span>(e) {</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&#39;RETURN_BUFFER&#39;</span>) {</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (currentBuffer <span class="op">===</span> bufferA) {</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>            bufferB <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>(e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">buffer</span>)<span class="op">;</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">else</span> {</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>            bufferA <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>(e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">buffer</span>)<span class="op">;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h4 id="2-main-thread-processing-and-buffer-return">2. Main Thread
+Processing and Buffer Return</h4>
+<p>Once the main thread receives the transferred array, it updates the
+visual scene graph (e.g., Three.js meshes) and immediately transfers the
+empty buffer back to the worker.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>physicsWorker<span class="op">.</span><span class="at">onmessage</span> <span class="op">=</span> <span class="kw">function</span>(e) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&#39;TRANSFORMS&#39;</span>) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> data <span class="op">=</span> e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">data</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> count <span class="op">=</span> e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">count</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> count<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> offset <span class="op">=</span> i <span class="op">*</span> <span class="dv">8</span><span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> id <span class="op">=</span> data[offset]<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> mesh <span class="op">=</span> sceneMeshes[id]<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (mesh) {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                mesh<span class="op">.</span><span class="at">position</span><span class="op">.</span><span class="fu">set</span>(data[offset <span class="op">+</span> <span class="dv">1</span>]<span class="op">,</span> data[offset <span class="op">+</span> <span class="dv">2</span>]<span class="op">,</span> data[offset <span class="op">+</span> <span class="dv">3</span>])<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>                mesh<span class="op">.</span><span class="at">quaternion</span><span class="op">.</span><span class="fu">set</span>(data[offset <span class="op">+</span> <span class="dv">4</span>]<span class="op">,</span> data[offset <span class="op">+</span> <span class="dv">5</span>]<span class="op">,</span> data[offset <span class="op">+</span> <span class="dv">6</span>]<span class="op">,</span> data[offset <span class="op">+</span> <span class="dv">7</span>])<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Return the buffer back to the worker to prevent garbage collection allocation</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        physicsWorker<span class="op">.</span><span class="fu">postMessage</span>({ <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;RETURN_BUFFER&#39;</span><span class="op">,</span> <span class="dt">buffer</span><span class="op">:</span> data<span class="op">.</span><span class="at">buffer</span> }<span class="op">,</span> [data<span class="op">.</span><span class="at">buffer</span>])<span class="op">;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h3 id="summary-of-best-practices">Summary of Best Practices</h3>
+<ul>
+<li><strong>Keep Arrays Flat:</strong> Never transfer nested arrays or
+objects.</li>
+<li><strong>Double Buffer:</strong> Always send buffers back to the
+worker when using Transferables to avoid <code>new Float32Array</code>
+allocations on every frame.</li>
+<li><strong>Use User Indexes:</strong> Assign an integer index to
+<code>body.setUserIndex(id)</code> within Ammo.js to quickly map the
+flat array data back to your main-thread 3D meshes without string
+lookups.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

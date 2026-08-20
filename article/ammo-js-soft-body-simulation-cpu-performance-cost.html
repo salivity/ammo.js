@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Soft Body Simulation CPU Performance Cost - ammo.js</title>
+    <meta name="description" content="This article examines the CPU performance impact of running multiple soft body simulations in ammo.js, the WebAssembly port of the Bullet physics engine. We will explore why soft bodies are computationally demanding, outline expected performance limits o">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-soft-body-simulation-cpu-performance-cost">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Soft Body Simulation CPU Performance Cost - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-soft-body-simulation-cpu-performance-cost" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article examines the CPU performance impact of running multiple soft body simulations in ammo.js, the WebAssembly port of the Bullet physics engine. We will explore why soft bodies are computationally demanding, outline expected performance limits o" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-soft-body-simulation-cpu-performance-cost">Ammo.js Soft
+Body Simulation CPU Performance Cost</h1>
+<p>This article examines the CPU performance impact of running multiple
+soft body simulations in ammo.js, the WebAssembly port of the Bullet
+physics engine. We will explore why soft bodies are computationally
+demanding, outline expected performance limits on modern hardware, and
+identify the primary bottlenecks and optimization strategies to maintain
+a stable 60 FPS in web-based 3D applications.</p>
+<h2 id="why-soft-bodies-are-cpu-intensive">Why Soft Bodies Are
+CPU-Intensive</h2>
+<p>Unlike rigid bodies, which only track a single position and
+orientation in 3D space, soft bodies (like cloth, ropes, or deformable
+Jello-like objects) are represented by a network of vertices (nodes)
+connected by constraints (links/springs).</p>
+<p>Every physics step, the CPU must calculate:</p>
+<ul>
+<li>The forces acting on every individual node.</li>
+<li>The distance constraints between connected nodes (requiring multiple
+solver iterations to resolve).</li>
+<li>Dynamic collision detection for every node against other rigid or
+soft bodies in the scene.</li>
+</ul>
+<p>Because ammo.js runs in the single-threaded environment of the
+browser (unless manually offloaded to a Web Worker), these calculations
+directly compete with your graphics rendering and application logic on
+the main thread.</p>
+<h2 id="expected-performance-cost-and-limits">Expected Performance Cost
+and Limits</h2>
+<p>The CPU performance of soft bodies in ammo.js scales non-linearly
+with the complexity of the meshes. Below is what you can expect on
+average modern desktop and mobile CPUs:</p>
+<ul>
+<li><strong>Low Complexity (1 to 3 soft bodies, &lt;150 vertices
+each):</strong> Minimal impact. Modern desktop and mid-range mobile CPUs
+can easily handle this at 60 FPS, utilizing roughly 5% to 15% of a
+single CPU thread.</li>
+<li><strong>Moderate Complexity (5 to 10 soft bodies, ~200 vertices
+each):</strong> Moderate to high impact. Desktop CPUs will maintain 60
+FPS but might see CPU utilization rise to 30-50% on the main thread.
+Mobile devices will likely experience thermal throttling and frame
+drops.</li>
+<li><strong>High Complexity (10+ soft bodies or &gt;500 vertices per
+body):</strong> Severe performance degradation. The CPU bottleneck will
+push frame rates well below 30 FPS, causing noticeable stuttering and
+input lag as the physics step takes longer than the 16.6ms frame
+budget.</li>
+</ul>
+<h2 id="key-factors-influencing-cpu-overhead">Key Factors Influencing
+CPU Overhead</h2>
+<p>If you are running multiple soft bodies, three main parameters
+dictate your CPU load:</p>
+<ol type="1">
+<li><strong>Vertex Count:</strong> This is the single largest factor. A
+soft body with 500 vertices requires exponentially more constraint
+solving than five soft bodies with 100 vertices each.</li>
+<li><strong>Solver Iterations:</strong> The <code>m_numIterations</code>
+parameter determines how many times ammo.js tries to resolve constraints
+per step. High iterations make soft bodies look more realistic and less
+stretchy, but double the iterations roughly doubles the CPU cost.</li>
+<li><strong>Collision Types:</strong> Soft-to-rigid collisions are
+relatively cheap. Soft-to-soft collisions (two deformable meshes bumping
+into each other) are incredibly expensive and will quickly overwhelm the
+CPU if multiple bodies are interacting simultaneously.</li>
+</ol>
+<h2 id="best-practices-for-mitigation">Best Practices for
+Mitigation</h2>
+<p>To run multiple soft bodies in ammo.js without destroying your
+application's frame rate, implement the following optimizations:</p>
+<ul>
+<li><strong>Use Physics Proxies:</strong> Run the soft body simulation
+on a very low-resolution physics mesh (e.g., 50 vertices), and use
+skinning or vertex interpolation to deform a high-resolution visual mesh
+to match it.</li>
+<li><strong>Offload to Web Workers:</strong> Run the ammo.js physics
+loop inside a Web Worker. This moves the heavy calculations to a
+separate CPU thread, keeping the main thread free for rendering and UI
+interactions.</li>
+<li><strong>Disable Self-Collision:</strong> Avoid enabling
+self-collision on soft bodies unless absolutely necessary for the visual
+effect.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

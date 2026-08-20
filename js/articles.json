@@ -1,0 +1,1802 @@
+[
+  [
+    300,
+    "Create Anti-Gravity Fields with Ammo.js Trigger Volumes",
+    "This guide explains how to implement a custom anti-gravity field in a 3D environment using the Ammo.js physics engine. You will learn how to set up a ghost object as a trigger volume, detect when rigid bodies enter this zone, and apply a counter-gravity",
+    false
+  ],
+  [
+    299,
+    "Ammo.js Contact Manifold Caching Best Practices",
+    "In high-performance WebGL applications, managing memory is crucial to preventing frame rate stutter caused by garbage collection. This article outlines the best practices for caching and reusing contact manifolds in ammo.js to minimize JavaScript object",
+    false
+  ],
+  [
+    298,
+    "Prevent Ammo.js Floating-Point Drift for Stationary Objects",
+    "In physics simulations using ammo.js, stationary dynamic rigid bodies can experience subtle, unwanted movement over time due to accumulated floating-point inaccuracies. This article explains why this \"floating-point drift\" occurs and provides practical s",
+    false
+  ],
+  [
+    297,
+    "Ammo.js stepSimulation Sequence of Events",
+    "When developing 3D applications with ammo.js (the Emscripten port of the Bullet Physics library), the stepSimulation method is the core driver of the physics world. This article breaks down the exact sequence of internal events and phases that occur duri",
+    false
+  ],
+  [
+    296,
+    "Safe Variable Time Step Main Loop in Ammo.js",
+    "Implementing physics in web applications using ammo.js (a WebAssembly port of the Bullet Physics engine) requires a robust simulation loop. While fixed time steps are ideal for physics stability, real-world browser frame rates fluctuate due to rendering",
+    false
+  ],
+  [
+    295,
+    "Reset Ammo.js Physics World Without Reloading",
+    "Resetting an Ammo.js physics simulation back to its original state is a common requirement for games and interactive 3D applications, allowing players to restart levels instantly without reloading the entire webpage. This article outlines the two most ef",
+    false
+  ],
+  [
+    294,
+    "Guide to btActionInterface in Ammo.js Physics",
+    "This article provides a comprehensive overview of the btActionInterface in ammo.js (the JavaScript port of the Bullet Physics engine) and demonstrates how to use it to build custom physics controllers. You will learn the core concepts behind this interfa",
+    false
+  ],
+  [
+    293,
+    "Assign Custom User Data to Ammo.js Rigid Body",
+    "When integrating the Ammo.js physics engine with a 3D graphics library like Three.js, you often need to identify which graphical mesh corresponds to a specific rigid body during collision detection. Because Ammo.js is a WebAssembly/Emscripten port of Bul",
+    false
+  ],
+  [
+    292,
+    "btDiscreteDynamicsWorld vs btSoftRigidDynamicsWorld in Ammo.js",
+    "When developing 3D physics simulations for the web using ammo.js (the Emscripten port of the Bullet physics engine), choosing the correct physics world is crucial for both functionality and performance. This article compares btDiscreteDynamicsWorld and b",
+    false
+  ],
+  [
+    291,
+    "Securely Initialize Ammo.js in an Iframe",
+    "Integrating the Ammo.js physics engine inside an iframe requires careful handling of its asynchronous WebAssembly (Wasm) loading process to prevent race conditions and security vulnerabilities. This article explains how to securely sandbox the iframe, sa",
+    false
+  ],
+  [
+    290,
+    "Ammo.js Precision Issues in Large Coordinate Systems",
+    "Using 32-bit floating-point numbers in ammo.js—the Emscripten port of the Bullet physics engine—for large-scale coordinate systems introduces significant numerical precision limitations. As game worlds expand and objects move far from the origin (0,0",
+    false
+  ],
+  [
+    289,
+    "Calculate Velocity in Ammo.js with btTransformUtil",
+    "This article explains how to use the btTransformUtil class in ammo.js to calculate linear and angular velocities between two transforms over a given time step. You will learn the purpose of this utility class, the mathematical context behind its velocity",
+    false
+  ],
+  [
+    288,
+    "Convert Ammo.js Transform to Euler Angles",
+    "This article explains how to extract and convert an ammo.js transform object into Euler angles (pitch, yaw, and roll) represented in degrees. This process is essential for displaying 3D physics rotations in a standard 2D user interface or inspector panel",
+    false
+  ],
+  [
+    287,
+    "Fast ammo.js Quaternion to Float32Array Copy",
+    "Copying rotation data from an ammo.js physics engine quaternion to a JavaScript Float32Array quickly is crucial for maintaining high frame rates in WebGL applications. The fastest method bypasses individual WebAssembly getter functions and directly reads",
+    false
+  ],
+  [
+    286,
+    "How to Invert a btMatrix3x3 in Ammo.js",
+    "This article explains how to invert a btMatrix3x3 matrix using the native mathematical functions provided by Ammo.js, the JavaScript port of the Bullet physics engine. You will learn the exact API methods required to perform the inversion, see a practica",
+    false
+  ],
+  [
+    285,
+    "Continuous Raycasting Along a Spline with ammo.js",
+    "Ammo.js, the Emscripten port of the Bullet physics engine, cannot perform continuous curved raycasting along a spline path out of the box because its native raycasting API is strictly linear. However, you can easily achieve this functionality by discreti",
+    false
+  ],
+  [
+    284,
+    "How to Get Ammo.js Raycast Hit Fraction",
+    "This article explains how to retrieve the fraction of the total ray distance traveled when performing a raycast in Ammo.js. You will learn how to access the specific property on the raycast callback object that contains this value and how to use it to ca",
+    false
+  ],
+  [
+    283,
+    "Filter Convex Sweep Tests by Layer in Ammo.js",
+    "This article explains how to restrict a convex sweep test in Ammo.js to specific collision layers. You will learn how to configure bitwise collision groups and masks, apply them to a ClosestConvexResultCallback, and execute the filtered sweep test to ign",
+    false
+  ],
+  [
+    282,
+    "Contact Test vs Raycast in Ammo.js",
+    "This article explains the fundamental differences between a contact test and a standard raycast in the ammo.js physics engine. It explores how each method works, their primary use cases, and how to choose the right collision detection approach for your W",
+    false
+  ],
+  [
+    281,
+    "How to Perform Bounding Box Queries in Ammo.js",
+    "This article explains how to perform a bounding box query in the Ammo.js physics engine to detect all rigid bodies within a specific 3D area. You will learn how to define an Axis-Aligned Bounding Box (AABB), implement a contact result callback, execute t",
+    false
+  ],
+  [
+    280,
+    "Calculate Speedometer Velocity in Ammo.js Vehicle",
+    "This article explains how to accurately calculate and retrieve the speedometer velocity from a btRaycastVehicle chassis in Ammo.js. You will learn how to extract the linear velocity from the vehicle's rigid body, determine directional forward and reverse",
+    false
+  ],
+  [
+    279,
+    "Disable Rear Wheel Steering in Ammo.js Vehicle",
+    "This article explains how to disable the steering functionality on the rear wheels of a 3D vehicle using the Ammo.js physics engine. You will learn how the raycast vehicle system manages steering angles for individual wheels and how to configure your veh",
+    false
+  ],
+  [
+    278,
+    "Simulate Aircraft Landing Gear with Ammo.js Raycaster",
+    "This article explains how to simulate an aircraft's landing gear using the btRaycastVehicle utility in the ammo.js physics engine. While the raycaster vehicle is primarily designed for wheeled ground vehicles like cars, its underlying suspension, frictio",
+    false
+  ],
+  [
+    277,
+    "How Ammo.js Roll Influence Affects Vehicle Stability",
+    "This article explains how the rollInfluence parameter affects the stability of a btRaycastVehicle in the ammo.js physics engine. We will explore how adjusting this value alters body roll, prevents rollovers, and changes handling characteristics during sh",
+    false
+  ],
+  [
+    276,
+    "Calculate Wheel Slip Angle in Ammo.js Raycast Vehicle",
+    "This article explains how to calculate the lateral slip angle of a wheel in an ammo.js raycast vehicle simulation. By determining the difference between the direction a wheel is pointing and its actual direction of travel, you can implement realistic tir",
+    false
+  ],
+  [
+    275,
+    "Ammo.js Performance: Thousands of Active Motion States",
+    "Using ammo.js—the WebAssembly port of the Bullet physics engine—with thousands of active motion states can severely degrade application performance. This article examines how active motion states impact CPU overhead, memory usage, and rendering frame",
+    false
+  ],
+  [
+    274,
+    "Extract Ammo.js Motion State Interpolated Transform",
+    "This article explains how to extract the interpolated transform matrix from an Ammo.js motion state. You will learn how to access the btMotionState of a rigid body, retrieve its world transform, and extract the position and rotation data required to sync",
+    false
+  ],
+  [
+    273,
+    "Does updating btMotionState wake up ammo.js rigid body",
+    "This article explores whether updating a btMotionState in ammo.js automatically wakes up a sleeping rigid body. It explains the relationship between motion states and body activation, and provides the necessary steps to ensure your physics bodies react c",
+    false
+  ],
+  [
+    272,
+    "Custom btMotionState Visual Interpolation in Ammo.js",
+    "This article explains how to implement a custom btMotionState in Ammo.js to decouple your physics simulation tick rate from your rendering frame rate. By capturing both the previous and current physics states, you can perform visual interpolation (LERP a",
+    false
+  ],
+  [
+    271,
+    "Ammo.js btDefaultMotionState vs Manual Transform Sync",
+    "In ammo.js, synchronizing the positions and rotations of physics bodies with their corresponding visual 3D meshes is a fundamental task. While developers can manually copy transform data every frame, using btDefaultMotionState is the industry-standard be",
+    false
+  ],
+  [
+    270,
+    "Optimize 3D Mesh for Ammo.js Convex Hull",
+    "This article explains how to optimize complex, imported 3D meshes for use with the ammo.js physics engine's convex hull generator (btConvexHullShape). You will learn how to reduce vertex counts, clean up geometry in 3D modeling software, and properly ext",
+    false
+  ],
+  [
+    269,
+    "How to Simulate 2D Capsule Shapes with Ammo.js",
+    "This article explains what a 2D capsule shape is and demonstrates how to simulate its physics in a 2D plane using the 3D physics engine Ammo.js. You will learn how to define a capsule's geometry, map it to Ammo.js's 3D collision shapes, and restrict rigi",
+    false
+  ],
+  [
+    268,
+    "Extract Vertex Data from Ammo.js Convex Hull",
+    "This article explains how to retrieve raw vertex coordinates from an internal btConvexHullShape in ammo.js (the Emscripten port of the Bullet physics engine). You will learn how to access the underlying shape representation, iterate through its points us",
+    false
+  ],
+  [
+    267,
+    "Ammo.js Compound Shape Max Child Shapes",
+    "This article provides a quick overview of the recommended maximum number of child shapes for a compound shape in ammo.js. It explains the practical performance limits, the impact of complex collision shapes on web-based physics simulations, and alternati",
+    false
+  ],
+  [
+    266,
+    "Create Torus Collision Shape in Ammo.js",
+    "This article explains how to programmatically construct a 3D torus collision shape in the Ammo.js physics engine using compound shapes. Because Ammo.js does not feature a native torus collision primitive, this guide demonstrates how to approximate a toru",
+    false
+  ],
+  [
+    265,
+    "How to Calculate Sliding Velocity in Ammo.js",
+    "This article explains how to determine the relative sliding (tangential) velocity between two intersecting or colliding physical bodies using the Ammo.js physics engine. You will learn how to access contact manifolds, extract collision normals, calculate",
+    false
+  ],
+  [
+    264,
+    "How to Make Ammo.js Objects Frictionless and Bouncy",
+    "In ammo.js, the physics engine commonly used alongside 3D libraries like Three.js, achieving a perfectly frictionless yet highly bouncy object requires configuring specific physical properties on the rigid body. This article provides a direct, step-by-st",
+    false
+  ],
+  [
+    263,
+    "Ammo.js Contact Threshold vs Resting Distance",
+    "This article explains the differences between the contact processing threshold and resting contact distances in the ammo.js physics engine. We will explore how these two distinct parameters affect collision detection, simulation performance, and physical",
+    false
+  ],
+  [
+    262,
+    "Combine Restitution in Ammo.js Using Custom Callbacks",
+    "This article explains how to override the default multiplicative restitution (bounciness) behavior in Ammo.js by implementing a custom callback mechanism. You will learn how to configure your rigid bodies, intercept collision contacts, and apply a custom",
+    false
+  ],
+  [
+    261,
+    "How to Implement Custom Friction in Ammo.js",
+    "This article explains how to override the default friction calculations in Ammo.js (the WebAssembly/JavaScript port of the Bullet physics engine) using a custom friction model. By default, Ammo.js calculates combined friction by multiplying the friction",
+    false
+  ],
+  [
+    260,
+    "Ammo.js Physics to Pixels Scaling Ratio for 2D Games",
+    "Integrating the 3D physics engine ammo.js into a 2D game requires scaling physics units to screen pixels to ensure realistic movement and stable collision detection. This article explains the ideal scale ratio for mapping ammo.js meters to pixels, why pr",
+    false
+  ],
+  [
+    259,
+    "Scaling Ammo.js World: Impact on Physics Stability",
+    "Scaling the entire simulation world in ammo.js (the JavaScript port of the Bullet Physics engine) by a factor of 10 has a profound impact on simulation stability, collision accuracy, and performance. While scaling up can resolve issues related to extreme",
+    false
+  ],
+  [
+    258,
+    "Pause and Resume Ammo.js Physics",
+    "Controlling the execution of a physics engine is essential for implementing pause menus, managing game states, and optimizing performance in WebGL applications. This article provides a direct guide on how to globally pause and resume the ammo.js physics",
+    false
+  ],
+  [
+    257,
+    "Run Multiple Ammo.js Worlds Simultaneously",
+    "Yes, it is entirely possible to run two or more completely independent Ammo.js physics worlds simultaneously in the same application. This article explains how to achieve this by instantiating separate sets of core Bullet Physics components, allowing you",
+    false
+  ],
+  [
+    256,
+    "Simulate Zero Gravity in a Specific Ammo.js Region",
+    "This article explains how to create a localized zero-gravity zone within an Ammo.js physics simulation. You will learn how to define a specific boundary, detect when physics bodies enter this region, and manipulate their gravity properties dynamically to",
+    false
+  ],
+  [
+    255,
+    "Debug Ammo.js Broadphase Cache Phantom Collisions",
+    "Phantom collisions in ammo.js (the Emscripten port of the Bullet physics engine) occur when the broadphase collision detection phase falsely pairs objects that are no longer colliding, or fails to register that an object has moved. This article explains",
+    false
+  ],
+  [
+    254,
+    "Why Ammo.js Raycast Fails and Returns No Hits",
+    "In WebGL 3D physics development, developers frequently encounter issues where an ammo.js raycast silently fails, returning zero hits despite visually intersecting with objects in the scene. This article diagnoses the most common causes of this issue—ra",
+    false
+  ],
+  [
+    253,
+    "Visualize Ammo.js Soft Body Nodes with WebGL Debug Drawer",
+    "This article explains how to extract, process, and render soft body simulation nodes from Ammo.js using a custom WebGL debug drawer. You will learn how to access the underlying physics node data in JavaScript, buffer these coordinates into WebGL, and dra",
+    false
+  ],
+  [
+    252,
+    "Fix Ammo.js Maximum Call Stack Size Exceeded Error",
+    "The \"maximum call stack size exceeded\" error in ammo.js typically occurs when the physics engine is pushed into an infinite recursion loop, most commonly triggered by passing invalid delta time values to the simulation step or executing recursive collisi",
+    false
+  ],
+  [
+    251,
+    "Access Bullet Profile Timers in Ammo.js",
+    "This article explains how to access and utilize the internal Bullet physics profiling timers within Ammo.js to measure simulation performance. You will learn how to expose the C++ profile manager classes to JavaScript, retrieve timing data, and recursive",
+    false
+  ],
+  [
+    250,
+    "setWorldTransform vs setCenterOfMassTransform in Ammo.js",
+    "In Ammo.js (the Emscripten port of the Bullet Physics engine), positioning and moving rigid bodies requires a clear understanding of how the engine tracks spatial coordinates. While both setWorldTransform and setCenterOfMassTransform are used to define a",
+    false
+  ],
+  [
+    249,
+    "Move Ammo.js Rigid Body Without Breaking Physics",
+    "Moving an active rigid body in ammo.js (the JavaScript port of the Bullet physics engine) requires careful handling to prevent glitches, clipping, or breaking the physics solver. This article explains the three safest methods to translate or teleport an",
+    false
+  ],
+  [
+    248,
+    "Why Recalculate Inertia After Scaling Ammo.js Shapes",
+    "When working with the ammo.js physics engine, adjusting the local scaling of a collision shape alters its physical dimensions. Because a shape's mass distribution changes with its size, the rigid body's local inertia tensor becomes outdated. This article",
+    false
+  ],
+  [
+    247,
+    "Update Ammo.js Collision Shape Size on Scale",
+    "This article explains how to dynamically update the collision shape of a rigid body when its corresponding visual object scales up during an active Ammo.js simulation. You will learn the exact steps required to apply local scaling to an existing collisio",
+    false
+  ],
+  [
+    246,
+    "What Happens When an Ammo.js Constraint Breaks",
+    "When a physics constraint in ammo.js (the JavaScript port of the Bullet physics engine) breaks, the structural link holding two rigid bodies together is severed, fundamentally altering their behavior in the simulation. This article explains the immediate",
+    false
+  ],
+  [
+    245,
+    "Simulate a Pulley System with Ammo.js Constraints",
+    "Simulating a realistic pulley system in a 3D web application requires a physics engine capable of handling complex joint constraints. This article provides a step-by-step guide on how to create a functional pulley system using ammo.js, the WebAssembly po",
+    false
+  ],
+  [
+    244,
+    "How to Create Custom Ammo.js Constraints",
+    "Creating custom physics constraints in ammo.js by extending its base classes directly in JavaScript is not natively supported due to the WebAssembly boundary. Because ammo.js is a direct Emscripten port of the C++ Bullet Physics engine, JavaScript cannot",
+    false
+  ],
+  [
+    243,
+    "Read Current Angle of Ammo.js Hinge Constraint",
+    "This article explains how to retrieve the current rotation angle of an active hinge constraint in the Ammo.js physics engine. You will learn the specific API method required to access this data, view a practical JavaScript code example, and understand ho",
+    false
+  ],
+  [
+    242,
+    "Calculate Ammo.js Hinge Breaking Impulse",
+    "This article explains how to calculate and implement the breaking impulse threshold for a hinge constraint in the Ammo.js physics engine. You will learn the core physics formula used to determine this threshold based on maximum force and simulation time",
+    false
+  ],
+  [
+    241,
+    "Breakable Windows with Ammo.js Constraints",
+    "This article explains how to implement a realistic, breakable glass window using fractured physics shards and Ammo.js constraints. You will learn how to structure the fractured meshes, connect them using rigid body constraints, and dynamically break thos",
+    false
+  ],
+  [
+    240,
+    "Sync Ammo.js Physics with Svelte Lifecycle",
+    "This article explains how to efficiently integrate the Ammo.js physics engine with the Svelte component lifecycle. You will learn how to initialize the WebAssembly-based physics world, run a performant simulation loop using Svelte’s native lifecycle ho",
+    false
+  ],
+  [
+    239,
+    "Integrate ammo.js in Angular for Physics State Management",
+    "Integrating ammo.js (the WebAssembly port of the Bullet physics engine) into an Angular service for global physics state management is highly feasible, but it is not entirely \"seamless\" out of the box. Because ammo.js relies on asynchronous WebAssembly (",
+    false
+  ],
+  [
+    238,
+    "Ammo.js Memory Cleanup on Vue Component Unmount",
+    "This article explains how to properly manage and release memory allocated by the Ammo.js physics engine when a Vue.js component unmounts. Since Ammo.js is a WebAssembly (Wasm) port of the C++ Bullet Physics library, JavaScript's native garbage collector",
+    false
+  ],
+  [
+    237,
+    "How to Initialize Ammo.js in React useEffect",
+    "Integrating the asynchronous ammo.js physics engine into a React application requires careful lifecycle management to prevent memory leaks, redundant initializations, and race conditions. This article provides a straightforward guide and a production-rea",
+    false
+  ],
+  [
+    236,
+    "Implement Wind on Ammo.js Soft Body Flag",
+    "This article explains how to implement realistic aerodynamic wind forces on a soft body flag using the Ammo.js physics engine. You will learn how to configure the soft body's aerodynamic properties, enable the correct simulation model, and apply dynamic",
+    false
+  ],
+  [
+    235,
+    "Read Stress and Tension in Ammo.js Soft Bodies",
+    "This article explains how to measure and retrieve localized tension and stress values across an Ammo.js soft body. By analyzing the deformation of the underlying spring-like links that connect the soft body nodes, you can calculate real-time structural s",
+    false
+  ],
+  [
+    234,
+    "Attach Rigid Body to Moving Soft Body in Ammo.js",
+    "This article explains how to dynamically attach a rigid body to a moving soft body mesh using the ammo.js physics library. You will learn the core concepts behind soft body anchors, how to identify the correct attachment point on a mesh at runtime, and t",
+    false
+  ],
+  [
+    233,
+    "Ammo.js Node-to-Node vs Face-to-Face Collisions",
+    "This article explains the differences between node-to-node and face-to-face soft body collision detection in the ammo.js physics engine. You will learn how both methods function under the hood, their impact on performance and simulation accuracy, and how",
+    false
+  ],
+  [
+    232,
+    "Adjust ammo.js Soft Body Bending Constraints",
+    "This article explains how to adjust the bending constraints of a soft body cloth in ammo.js to control its stiffness and behavior. You will learn about the key properties involved, how to generate bending constraints, and how to configure the material st",
+    false
+  ],
+  [
+    231,
+    "Soft Body Cluster Collision in Ammo.js",
+    "This article explains soft body cluster collision in the ammo.js physics engine, detailing what it is, why it is used for performance optimization, and the exact steps required to enable it in your JavaScript-based 3D applications. In physics simulation,",
+    false
+  ],
+  [
+    230,
+    "Ammo.js Kinematic Character Controller Ground Detection",
+    "This article explains how to accurately detect if a kinematic character controller in Ammo.js (the JavaScript port of the Bullet physics engine) is touching the ground. We will explore the built-in onGround() method, discuss its limitations, and demonstr",
+    false
+  ],
+  [
+    229,
+    "How to Make an Ammo.js Character Controller Jump",
+    "Implementing a jump mechanic with the btKinematicCharacterController in ammo.js (the WebIDL/Emscripten port of Bullet Physics) requires utilizing the controller's built-in physics methods rather than manually applying forces. This article provides a dire",
+    false
+  ],
+  [
+    228,
+    "Apply Gravity to Ammo.js Kinematic Character Controller",
+    "This article explains how to manually calculate and apply gravity to a kinematic character controller in Ammo.js. While the btKinematicCharacterController has a built-in gravity system, handling gravity manually gives you precise control over jump curves",
+    false
+  ],
+  [
+    227,
+    "Ammo.js Character Controller Step Height Guide",
+    "This article explains how the step height parameter influences stairs traversal for a kinematic character controller in the ammo.js physics library. It covers the underlying physics mechanics of step detection, the consequences of misconfiguring this val",
+    false
+  ],
+  [
+    226,
+    "Set Max Slope Angle in Ammo.js Character Controller",
+    "This article explains how to configure the maximum slope angle a character can climb when using the btKinematicCharacterController in the ammo.js physics engine. You will learn the specific API method required, how to convert your target angle into the c",
+    false
+  ],
+  [
+    225,
+    "Ammo.js Step Simulation and Server Tick Rate",
+    "In multiplayer game development, synchronizing physics across the client and server is a critical challenge. This article examines whether the step simulation in Ammo.js—the JavaScript port of the Bullet physics engine—should be strictly tied to the",
+    false
+  ],
+  [
+    224,
+    "Clock Synchronization in Ammo.js Multiplayer",
+    "This article provides a practical guide on how to establish clock synchronization for deterministic multiplayer physics simulations using ammo.js (the WebAssembly port of Bullet Physics). It covers the mathematical logic behind network time synchronizati",
+    false
+  ],
+  [
+    223,
+    "Smooth Network Corrections for Ammo.js Physics",
+    "Synchronizing multiplayer physics using ammo.js often results in visual jitter or teleportation due to network latency and packet loss. This article covers the essential techniques used to smooth out network corrections for ammo.js rigid bodies, includin",
+    false
+  ],
+  [
+    222,
+    "Client-Side Prediction with Authoritative Ammo.js",
+    "Implementing client-side prediction with an authoritative ammo.js physics server is essential for creating responsive, lag-free multiplayer games. This guide explains how to run synchronized physics simulations on both the client and server, predict loca",
+    false
+  ],
+  [
+    221,
+    "Sync Input with Ammo.js in a Web Worker",
+    "Running a heavy physics engine like ammo.js in an asynchronous Web Worker keeps the main rendering thread responsive, but it introduces the challenge of input synchronization. Because Web Workers do not have access to the DOM, they cannot directly listen",
+    false
+  ],
+  [
+    220,
+    "Can SharedArrayBuffer Eliminate ammo.js Message Latency?",
+    "High-performance web applications often offload physics engines like ammo.js to Web Workers to keep the main thread responsive. However, standard message passing using postMessage introduces latency and garbage collection overhead that can bottleneck ren",
+    false
+  ],
+  [
+    219,
+    "Transfer Ammo.js Transforms From Web Worker Efficiently",
+    "Running an Ammo.js physics simulation inside a Web Worker keeps the main thread responsive, but transferring high-frequency transform data (position and rotation) back to the main thread for rendering can quickly become a performance bottleneck. The most",
+    false
+  ],
+  [
+    218,
+    "Run Ammo.js Physics inside a Web Worker",
+    "This article explains how to offload resource-intensive physics calculations from your main browser thread to a Web Worker using ammo.js (the Emscripten port of the Bullet physics engine). You will learn how to initialize the physics engine inside a work",
+    false
+  ],
+  [
+    217,
+    "How to Toggle CCD Dynamically in Ammo.js",
+    "This article explains how to dynamically enable and disable Continuous Collision Detection (CCD) for a specific rigid body in Ammo.js. You will learn how to use the built-in Bullet physics API methods to toggle this feature on the fly, allowing you to pr",
+    false
+  ],
+  [
+    216,
+    "Why is Ammo.js CCD Computationally Expensive?",
+    "Continuous Collision Detection (CCD) is a critical feature in physics engines like ammo.js used to prevent fast-moving objects from passing through other geometry, a glitch known as \"tunneling.\" While highly accurate, enabling CCD on a large number of ob",
+    false
+  ],
+  [
+    215,
+    "How to Use setCcdSweptSphereRadius in Ammo.js",
+    "This article explains the role of the setCcdSweptSphereRadius method in ammo.js, the JavaScript port of the Bullet physics engine. You will learn how this function prevents fast-moving physics bodies from passing through solid obstacles—a glitch known",
+    false
+  ],
+  [
+    214,
+    "Prevent Tunneling in Ammo.js with setCcdMotionThreshold",
+    "This article explains how to configure the setCcdMotionThreshold method in ammo.js to prevent \"tunneling\"—a common physics simulation issue where fast-moving objects pass through solid barriers. You will learn the mechanics behind Continuous Collision",
+    false
+  ],
+  [
+    213,
+    "Ammo.js Collision Margin and Stacked Bodies",
+    "This article explains how the collision margin in ammo.js (the JavaScript port of the Bullet physics engine) impacts the stability, alignment, and resting contact of stacked rigid bodies. You will learn how the collision margin creates a virtual boundary",
+    false
+  ],
+  [
+    212,
+    "Why Small Ammo.js Collision Shapes Behave Erratically",
+    "When working with small 3D physics bodies in ammo.js, developers often encounter erratic behaviors like jittering, clipping through surfaces, or bouncing unpredictably. This article explains how the underlying Bullet Physics engine handles collision dete",
+    false
+  ],
+  [
+    211,
+    "How to Set btBoxShape Collision Margin in Ammo.js",
+    "This article explains how to adjust the default collision margin of a btBoxShape in Ammo.js, the WebAssembly port of the Bullet physics engine. You will learn the exact API methods required to modify this margin, why it is important for your 3D physics s",
+    false
+  ],
+  [
+    210,
+    "What is Ammo.js Collision Margin and Why It Matters",
+    "This article explains the concept of collision margins in ammo.js, a popular WebAssembly port of the Bullet physics engine. You will learn what a collision margin is, how it functions as a protective buffer around 3D objects, and why tuning this paramete",
+    false
+  ],
+  [
+    209,
+    "Monitor Ammo.js Heap Memory Consumption",
+    "This article explains how to monitor the memory consumption of the ammo.js physics engine heap inside a web browser. Because ammo.js is a WebAssembly (or asm.js) port of the C++ Bullet Physics engine, it manages its own memory heap independently of the s",
+    false
+  ],
+  [
+    208,
+    "How to Shrink ammo.js WebAssembly Memory",
+    "While WebAssembly does not natively support shrinking its allocated memory buffer during runtime once it has expanded, optimizing and controlling the memory footprint of ammo.js is highly achievable. This article explains why WebAssembly memory cannot be",
+    false
+  ],
+  [
+    207,
+    "How to Destroy btMotionState in Ammo.js",
+    "In WebGL and 3D physics development using ammo.js (the Emscripten port of Bullet Physics), managing memory is critical to prevent severe memory leaks. This article provides a direct, step-by-step guide on how to properly use Ammo.destroy() to clean up cu",
+    false
+  ],
+  [
+    206,
+    "Ammo.js WebAssembly Heap Limit Exceeded",
+    "This article explains what happens when the ammo.js physics engine exceeds its allocated WebAssembly (Wasm) memory heap limit. We will explore the immediate technical consequences of running out of memory, including application crashes and silent failure",
+    false
+  ],
+  [
+    205,
+    "How to Increase Emscripten Memory Limit in Ammo.js",
+    "When building complex 3D physics simulations using ammo.js, you may encounter out-of-memory errors due to Emscripten's default memory limits. This article provides a straightforward guide on how to increase the default memory allocation and enable dynami",
+    false
+  ],
+  [
+    204,
+    "Deterministic Physics Replays with Ammo.js",
+    "This article explains how to achieve deterministic physics replays in web applications using the ammo.js physics engine. You will learn how to configure the physics world for consistency, record player inputs based on simulation ticks rather than real-wo",
+    false
+  ],
+  [
+    203,
+    "Export Ammo.js Collision Shapes to JSON",
+    "This article explains how to export Ammo.js collision shapes to a standard JSON format. While Ammo.js does not feature a native, single-method JSON exporter, developers can successfully serialize collision shapes by querying shape properties programmatic",
+    false
+  ],
+  [
+    202,
+    "Deserialize Ammo.js Rigid Body State",
+    "Recreating the exact state of a physics simulation in ammo.js requires a structured approach to saving and loading rigid body properties. This article outlines the optimal strategy for deserializing saved ammo.js rigid body states, focusing on restoring",
+    false
+  ],
+  [
+    201,
+    "Serialize Ammo.js Physics World for Save Games",
+    "To serialize the state of an ammo.js physics world for game saves, you cannot directly stringify the physics world object because ammo.js is a WebAssembly/Emscripten port of the C++ Bullet Physics engine, meaning its data lives in native memory heap spac",
+    false
+  ],
+  [
+    200,
+    "Ammo.js Constraint Solver and Cyclic Dependencies",
+    "This article explores how ammo.js, a JavaScript port of the Bullet physics engine, manages cyclic dependencies within complex, heavily constrained structures. We examine the core mechanics of its iterative Sequential Impulse (SI) solver, how it resolves",
+    false
+  ],
+  [
+    199,
+    "Ammo.js Swept Sphere Test for High-Speed Collision",
+    "In fast-paced 3D applications, fast-moving character controllers often pass right through thin walls or obstacles—a physics bug known as tunneling or clipping. This article provides a practical guide on how to implement a swept sphere test using Ammo.j",
+    false
+  ],
+  [
+    198,
+    "Ammo.js Local Inertia vs Mass Explained",
+    "In physics engines like Ammo.js, understanding the distinction between mass and local inertia is crucial for simulating realistic physical interactions. While mass dictates an object's resistance to linear movement, local inertia determines its resistanc",
+    false
+  ],
+  [
+    197,
+    "Aligning 3D Model Pivot with Ammo.js Center of Mass",
+    "This article explains how to precisely align a 3D model's visual pivot point with the center of mass of an ammo.js physics body. By centering the geometry of your 3D mesh (such as in Three.js) and matching it to the rigid body's local origin, you can pre",
+    false
+  ],
+  [
+    196,
+    "Can Ammo.js Simulate Destructive Environments?",
+    "This article explores whether the popular JavaScript physics engine, ammo.js, can natively handle destructive environments and fracturing meshes. We will examine the limitations of the library regarding geometry manipulation, look at how breakable constr",
+    false
+  ],
+  [
+    195,
+    "Fix Ammo.js Physics Scaling in Large Game Worlds",
+    "Developing large-scale 3D games with ammo.js—the JavaScript port of the Bullet physics engine—often introduces severe physics jitter, tunneling, and collision detection failures. These issues are primarily caused by floating-point precision loss as o",
+    false
+  ],
+  [
+    194,
+    "Ammo.js btDefaultMotionState and Custom Motion States",
+    "This article explains the role of btDefaultMotionState in Ammo.js, the JavaScript port of the Bullet physics engine. It covers how this default class handles the synchronization between physics simulations and 3D rendering engines, and provides clear gui",
+    false
+  ],
+  [
+    193,
+    "Create Ragdoll Physics with Ammo.js Rigid Bodies",
+    "This article provides a practical guide on implementing a robust, stable ragdoll character using Ammo.js, the JavaScript port of the Bullet physics engine. You will learn how to define the character's skeletal structure using rigid bodies, connect those",
+    false
+  ],
+  [
+    192,
+    "How to Fix Jitter in Stacked Ammo.js Boxes",
+    "Stacked rigid bodies in Ammo.js (a JavaScript port of the Bullet physics engine) often exhibit a realistic but frustrating shaking or jittering effect. This article explains the underlying causes of this instability—such as constraint solver limitation",
+    false
+  ],
+  [
+    191,
+    "How to Fix Ammo.js NaN Physics Explosions",
+    "In 3D web development, sudden physics \"explosions\" where objects disappear or fly off-screen are often caused by NaN (Not a Number) values propagating through the Ammo.js physics engine. This article explains why these errors occur, how to systematically",
+    false
+  ],
+  [
+    190,
+    "Ammo.js Mobile Browser Performance and Limitations",
+    "Deploying physics engines on the web requires balancing computational complexity with hardware constraints, a challenge that becomes highly visible when running ammo.js on mobile devices. While this WebAssembly (Wasm) port of the robust Bullet physics en",
+    false
+  ],
+  [
+    189,
+    "Cross-Origin Isolation for Ammo.js SharedArrayBuffer",
+    "To use the multi-threaded version of Ammo.js (a WebAssembly port of the Bullet physics engine), browsers require the use of SharedArrayBuffer. Because of security vulnerabilities like Spectre, browsers restrict SharedArrayBuffer unless the web page is ru",
+    false
+  ],
+  [
+    188,
+    "How to Run Deterministic Ammo.js in Node.js",
+    "Achieving deterministic physics simulations is critical for maintaining synchronization between a Node.js multiplayer server and its clients. Because ammo.js is a direct Emscripten port of the C++ Bullet Physics engine, it can run deterministically if co",
+    false
+  ],
+  [
+    187,
+    "Ammo.js vs Oimo.js Physics Execution Speed",
+    "This article compares the raw execution speed of ammo.js and Oimo.js, two prominent 3D physics engines used in web-based game development and simulations. By analyzing the structural differences between a WebAssembly-compiled C++ port (ammo.js) and a lig",
+    false
+  ],
+  [
+    186,
+    "Understanding the Enablement Pattern in use-cannon",
+    "This article explores the Enablement Pattern, an architectural design approach used by React-based physics libraries like use-cannon to abstract the highly complex, low-level APIs of engines like ammo.js. You will learn how this pattern bridges declarati",
+    false
+  ],
+  [
+    185,
+    "Create a Smaller Custom Ammo.js Build",
+    "This article explains how to significantly reduce the file size of ammo.js—the Emscripten port of the Bullet physics engine—by stripping out unused features. You will learn how to customize the WebIDL interface file, configure Emscripten compiler fla",
+    false
+  ],
+  [
+    184,
+    "Ammo.js and React Three Fiber Common Pitfalls",
+    "Integrating the Ammo.js physics engine with React Three Fiber (R3F) allows developers to build high-performance 3D simulations within a React architecture. However, coupling a heavy, WebAssembly-based imperative physics engine with React's declarative st",
+    false
+  ],
+  [
+    183,
+    "How to Bundle Ammo.js with Vite or Webpack",
+    "Bundling Ammo.js—the WebAssembly (WASM) port of the Bullet physics engine—often presents challenges for modern build tools due to its large file size and asynchronous WASM loading requirements. This article provides a clear, step-by-step guide to suc",
+    false
+  ],
+  [
+    182,
+    "Ammo.js vs Cannon.js Architectural Differences",
+    "Choosing the right 3D physics engine for web-based applications often comes down to selecting between Ammo.js and Cannon.js. This article explores the primary architectural differences between these two libraries, comparing their compilation origins, mem",
+    false
+  ],
+  [
+    181,
+    "Ammo.js vs Rapier: Determinism in Web Physics Engines",
+    "This article compares the deterministic capabilities of Ammo.js and the Rapier physics engine within web browser environments. It explores how each engine handles physics simulations, why cross-platform determinism is challenging in browsers, and how the",
+    false
+  ],
+  [
+    180,
+    "Ammo.js Internal Tick Callback for Custom Drag Profiles",
+    "This article explains how to implement custom, velocity-dependent drag profiles on rigid bodies in Ammo.js by leveraging the physics world's internal tick callback. You will learn why this callback is necessary for accurate physics, how to write a custom",
+    false
+  ],
+  [
+    179,
+    "Guide to btGhostPairCallback in Ammo.js",
+    "In physics-enabled web applications using ammo.js, detecting volumes of space without physical collision—such as trigger zones or sensor areas—is achieved using ghost objects. However, these objects cannot track overlaps out of the box. This article",
+    false
+  ],
+  [
+    178,
+    "Detect Fast Bullet Collision in Ammo.js",
+    "Fast-moving objects like bullets often pass through walls in physics simulations due to a phenomenon called \"tunneling,\" where an object's speed exceeds its size relative to the simulation's time step. This article explains how to prevent tunneling and a",
+    false
+  ],
+  [
+    177,
+    "Get Applied Impulse from Ammo.js Collisions",
+    "In physics-based web applications, determining the exact force of a collision is essential for features like calculating impact damage, playing dynamic audio, or triggering visual effects. This article provides a direct, step-by-step guide on how to acce",
+    false
+  ],
+  [
+    176,
+    "Identify Colliding Objects Using Ammo.js Manifolds",
+    "In 3D web development using ammo.js—the JavaScript port of the Bullet physics engine—detecting collisions requires querying the physics world's collision dispatcher. This article provides a direct, step-by-step guide on how to iterate through contact",
+    false
+  ],
+  [
+    175,
+    "Ammo.js Custom Broadphase Collision Filtering",
+    "This article explains how to filter specific collision pairs from generating contact points in Ammo.js by implementing a custom broadphase overlap callback. While Ammo.js provides default collision groups and masks for basic filtering, complex projects o",
+    false
+  ],
+  [
+    174,
+    "How to Use Ammo.js Internal Tick Callbacks",
+    "This article explains how to set up and use custom JavaScript callback functions within the ammo.js physics engine during its internal simulation ticks. You will learn why these callbacks are necessary for precise physics manipulation, how to register th",
+    false
+  ],
+  [
+    173,
+    "Get Collision Normal from Ammo.js Contact Manifold",
+    "This article explains how to retrieve the exact collision normal and face information from a contact manifold in Ammo.js. By accessing the physics world's dispatcher, iterating through active contact manifolds, and querying individual contact points, you",
+    false
+  ],
+  [
+    172,
+    "Ammo.js New vs Ongoing Collision Detection",
+    "This article explains the standard technique for distinguishing between a newly initiated collision and an ongoing contact in the ammo.js physics engine. Since ammo.js does not provide native event listeners for collision states, developers must implemen",
+    false
+  ],
+  [
+    171,
+    "How to Create Trigger Volumes in Ammo.js",
+    "In physics-based applications and game development, you often need to detect when an object enters a specific 3D region without causing a physical collision response, such as a bounce or blockage. This article guides you through implementing a trigger vo",
+    false
+  ],
+  [
+    170,
+    "Convert Ammo.js Transform to WebGL Matrix",
+    "This article explains the standard approach for converting an Ammo.btTransform object from the ammo.js physics library into a flat 16-element float array compatible with 4x4 WebGL matrices. We will cover the math behind the conversion, the standard extra",
+    false
+  ],
+  [
+    169,
+    "How to Calculate Dot Product in Ammo.js",
+    "This article explains how to quickly calculate the dot product of two directional vectors using Ammo.js, the JavaScript port of the Bullet physics engine. You will learn how to define 3D vectors using the library's native classes and utilize the built-in",
+    false
+  ],
+  [
+    168,
+    "Normalize btVector3 to Unit Length in Ammo.js",
+    "This article provides a straightforward guide on how to precisely normalize a btVector3 object to a unit length of 1.0 in ammo.js, the WebAssembly/JavaScript port of the Bullet physics engine. It covers the standard in-place normalization method, safe ha",
+    false
+  ],
+  [
+    167,
+    "btTransform and btRigidBody Relationship in ammo.js",
+    "This article explains the mathematical and structural relationship between btTransform and btRigidBody within the ammo.js physics engine. It covers how a rigid body uses transforms to represent its position and orientation in 3D space, the underlying mat",
+    false
+  ],
+  [
+    166,
+    "Create btMatrix3x3 from Column Vectors in Ammo.js",
+    "This article explains how to construct and populate a btMatrix3x3 rotation matrix using three individual btVector3 column vectors in ammo.js (the WebAssembly/Emscripten port of the Bullet physics engine). You will learn the most memory-efficient way to m",
+    false
+  ],
+  [
+    165,
+    "Smoothing ammo.js Physics Rendering via Interpolation",
+    "This article explains how to utilize the interpolation transform to eliminate visual jitter and achieve smooth rendering of physics objects in ammo.js. By decoupling the fixed-timestep physics simulation from the variable frame rate of the browser's rend",
+    false
+  ],
+  [
+    164,
+    "Multiply Two btTransform Objects in Ammo.js",
+    "This article explains how to multiply two btTransform objects using the native math functions provided by the Ammo.js physics library. You will learn how to use the built-in API to combine transformations efficiently without manually extracting or calcul",
+    false
+  ],
+  [
+    163,
+    "How to Calculate Inverse Transform in Ammo.js",
+    "This article explains the correct method for calculating the inverse of a spatial transform (btTransform) in the ammo.js physics library. You will learn how to use the built-in inverse methods, apply them to your 3D physics simulations, and properly mana",
+    false
+  ],
+  [
+    162,
+    "How to Get Basis Vectors from Ammo.js btMatrix3x3",
+    "This article explains how to extract the three basis vectors—representing the local X, Y, and Z directional axes—from a btMatrix3x3 rotation matrix in Ammo.js. You will learn the specific API methods required to access these vectors and how to proper",
+    false
+  ],
+  [
+    161,
+    "How to Perform Slerp with Ammo.js Quaternions",
+    "Spherical linear interpolation (slerp) is a mathematical technique used in 3D computer graphics and physics to smoothly transition between two rotations. This article explains how to perform a slerp operation using quaternions in ammo.js, the JavaScript",
+    false
+  ],
+  [
+    160,
+    "Efficiently Spawn and Destroy Projectiles in Ammo.js",
+    "Handling thousands of projectiles in ammo.js (the WebAssembly port of the Bullet physics engine) requires careful memory and CPU management to prevent garbage collection spikes and WebAssembly heap exhaustion. This article details the most memory-efficie",
+    false
+  ],
+  [
+    159,
+    "Speed Up ammo.js Raycasts Using Spatial Trees",
+    "Custom raycasting in ammo.js (the WebAssembly port of the Bullet Physics engine) can quickly become a major performance bottleneck in complex 3D applications. This article explains how integrating spatial partitioning trees—such as Bounding Volume Hier",
+    false
+  ],
+  [
+    158,
+    "Why Modifying Ammo.js Objects in Collision Loops is Dangerous",
+    "Modifying ammo.js objects, such as rigid bodies or collision shapes, directly inside a collision detection iteration loop can lead to critical memory corruption, application crashes, and unpredictable physics behavior. This article explains the underlyin",
+    false
+  ],
+  [
+    157,
+    "Remove Rigid Body during Ammo.js Collision Callback",
+    "Removing a rigid body directly inside an ammo.js collision callback will often crash your physics simulation because the WebAssembly engine is still iterating through its internal collision pipeline. To safely remove a rigid body, you must defer the remo",
+    false
+  ],
+  [
+    156,
+    "How Ammo.js clearForces Works Internally",
+    "This article explains the internal mechanics of calling clearForces() on the main physics world in ammo.js, the Emscripten-compiled JavaScript port of the Bullet Physics SDK. We will explore how this method propagates from the JavaScript wrapper down to",
+    false
+  ],
+  [
+    155,
+    "How to Clear Forces on a Rigid Body in Ammo.js",
+    "This article explains how to completely stop a rigid body and clear all of its active forces in the ammo.js physics engine. You will learn the exact API methods required to reset accumulated forces, nullify linear and angular velocities, and properly upd",
+    false
+  ],
+  [
+    154,
+    "How Ammo.js Uses Simulation Islands for CPU Optimization",
+    "In 3D physics simulation, managing computational load is crucial for maintaining high frame rates in real-time applications. This article explains the concept of simulation islands—discrete groups of interacting physics bodies—and explores how ammo.j",
+    false
+  ],
+  [
+    153,
+    "Configure Ammo.js Linear and Angular Sleep Thresholds",
+    "This article explains how to configure the linear and angular sleep thresholds for rigid bodies in an ammo.js physics simulation. By adjusting these thresholds, you can control when inactive physics bodies enter a sleeping state, significantly reducing C",
+    false
+  ],
+  [
+    152,
+    "Disable Ammo.js Rigid Body Deactivation",
+    "This article explains how to permanently prevent a critical rigid body from entering a sleep or deactivated state in the ammo.js physics engine. You will learn the specific API methods, state constants, and code implementation required to keep your physi",
+    false
+  ],
+  [
+    151,
+    "Force Ammo.js Rigid Body to Sleep State",
+    "This article explains how to explicitly force an active rigid body in Ammo.js to enter a sleep (deactivated) state. By putting idle physics bodies to sleep, you can significantly optimize your application's simulation performance and reduce CPU overhead.",
+    false
+  ],
+  [
+    150,
+    "How Ammo.js Handles Soft Body Self-Collision",
+    "This article explores how the ammo.js physics engine—the JavaScript port of the Bullet physics library—manages self-collision within complex soft bodies. We will examine the underlying algorithms, key configuration settings such as cluster-based coll",
+    false
+  ],
+  [
+    149,
+    "How to Pin Soft Body Cloth in Ammo.js",
+    "This article provides a step-by-step guide on how to securely anchor or pin the corners of a soft body cloth to specific points in 3D space using the Ammo.js physics engine. You will learn how to identify the correct nodes of the cloth mesh and use two p",
+    false
+  ],
+  [
+    148,
+    "Ammo.js Soft Body Solver Iterations and Cloth Intersection",
+    "This article explains how the soft body solver iterations setting in ammo.js prevents cloth self-intersection and clipping during web-based physics simulations. It details the relationship between solver passes, physics accuracy, and CPU performance, off",
+    false
+  ],
+  [
+    147,
+    "How to Tear and Deform Soft Bodies in Ammo.js",
+    "Simulating realistic physics in web applications often requires advanced soft body dynamics, such as tearing cloth or permanently deforming squishy objects. This article provides a direct guide on how to implement tearing and plastic deformation on soft",
+    false
+  ],
+  [
+    146,
+    "How to Apply Force to Ammo.js Soft Body Vertex",
+    "This article explains how to apply a localized physical force to a specific vertex (node) of an Ammo.js soft body. You will learn how to identify the target vertex index, create the force vector using the Ammo.js API, apply the force directly to the node",
+    false
+  ],
+  [
+    145,
+    "Ammo.js Soft Body Volume Preservation Configuration",
+    "This article provides a direct guide on configuring volume preservation for closed soft bodies in the ammo.js physics engine. You will learn the specific properties, coefficients, and methods required to make 3D soft meshes maintain their shape and preve",
+    false
+  ],
+  [
+    144,
+    "How Ammo.js Calculates Drag and Lift on Cloth",
+    "This article explains how the JavaScript physics engine ammo.js—a direct port of the Bullet Physics SDK—calculates aerodynamic drag and lift forces on soft body cloth simulations. It breaks down the underlying mathematical models, the configuration s",
+    false
+  ],
+  [
+    143,
+    "How to Simulate a Balloon with Ammo.js Soft Body",
+    "Simulating a pressurized object like a balloon in a WebGL environment requires soft body physics that can handle internal forces and volume conservation. This article explains how to configure Ammo.js—the Emscripten port of the Bullet physics engine—",
+    false
+  ],
+  [
+    142,
+    "Append Nodes to Ammo.js Soft Body Rope Dynamically",
+    "This article explains the technical process of dynamically appending a new node to an existing soft body rope in the Ammo.js physics engine. Since the WebIDL bindings of Ammo.js do not natively support resizing a soft body's node array at runtime, achiev",
+    false
+  ],
+  [
+    141,
+    "How to Create a Hanging Rope in Ammo.js",
+    "This article provides a step-by-step guide on how to create a realistic hanging rope using the soft body helpers in the Ammo.js physics engine. You will learn how to configure the physics world for soft bodies, utilize the rope helper function, customize",
+    false
+  ],
+  [
+    140,
+    "Understanding btUniversalConstraint vs 6DOF in ammo.js",
+    "This article explores the differences between the btUniversalConstraint and the standard 6-Degrees-of-Freedom (6DOF) joint in ammo.js, the JavaScript port of the Bullet physics engine. You will learn what each constraint does, how they structurally diffe",
+    false
+  ],
+  [
+    139,
+    "How Ammo.js Resolves Conflicting Rigid Body Constraints",
+    "This article explains how Ammo.js, a WebAssembly port of the Bullet Physics engine, handles situations where multiple, opposing constraints are applied to a single rigid body. You will learn about the underlying mathematical solver, the iterative process",
+    false
+  ],
+  [
+    138,
+    "Temporarily Disable Ammo.js Constraints",
+    "This article explains how to temporarily disable a specific physics constraint in ammo.js—the JavaScript port of the Bullet physics engine—without destroying the constraint object. You will learn the two primary methods for accomplishing this: removi",
+    false
+  ],
+  [
+    137,
+    "Ammo.js Hinge Constraint Motor Targets and Impulses",
+    "This article explains how to define and configure motor targets and maximum motor impulses for a hinge constraint in the ammo.js physics engine. You will learn how the angular motor uses target velocity, target angles, and impulse limits to control joint",
+    false
+  ],
+  [
+    136,
+    "Implementing Springs with Ammo.js Constraints",
+    "This article explains how to implement artificial spring behavior in physics simulations using native Ammo.js constraints. You will learn which constraints support spring dynamics, how to configure their stiffness and damping properties, and see a practi",
+    false
+  ],
+  [
+    135,
+    "Synchronize Rotating Bodies in ammo.js with btGearConstraint",
+    "In 3D physics simulations, coupling the rotational movement of two distinct objects is a common requirement for mechanical systems like gears, clocks, and machinery. This article explains how to use the btGearConstraint in ammo.js—the JavaScript port o",
+    false
+  ],
+  [
+    134,
+    "Configure Cone-Twist Constraint Limits in Ammo.js",
+    "This article explains how to configure the angular limits of a cone-twist constraint in ammo.js, the JavaScript port of the Bullet Physics engine. You will learn how to define the swing and twist boundaries using the setLimit method and apply these setti",
+    false
+  ],
+  [
+    133,
+    "Get Constraint Reaction Forces in Ammo.js",
+    "This article explains how to extract the reaction forces and torques acting upon a specific physics constraint (joint) in ammo.js. You will learn how to enable joint feedback, access the applied impulse data after a physics simulation step, and convert t",
+    false
+  ],
+  [
+    132,
+    "How to Use CFM for Springy Joints in Ammo.js",
+    "This article explains how to use Constraint Force Mixing (CFM) and Error Reduction Parameter (ERP) in ammo.js to configure springy, elastic physics joints. You will learn the mechanics behind these two parameters, how they interact to simulate spring-dam",
+    false
+  ],
+  [
+    131,
+    "What is Ammo.js ERP and How Does It Stabilize Joints?",
+    "This article explains the role of the Error Reduction Parameter (ERP) in ammo.js, a WebAssembly port of the Bullet physics engine. You will learn what ERP is, how it mathematically influences constraint resolution, and how to configure it alongside Const",
+    false
+  ],
+  [
+    130,
+    "Get Total Applied Force on Ammo.js Rigid Body",
+    "This article explains how to retrieve the total applied force acting on a specific ammo.js rigid body during a physics frame. You will learn how to use the built-in getTotalForce() method, understand the importance of timing within the simulation loop, a",
+    false
+  ],
+  [
+    129,
+    "Stop Rigid Body Velocity with Counter Impulse in Ammo.js",
+    "This article explains how to completely counteract and stop the linear velocity of a rigid body in the Ammo.js physics engine using an impulse. You will learn the mathematical logic behind calculating the counteracting impulse, how to retrieve the body's",
+    false
+  ],
+  [
+    128,
+    "Shift Center of Mass in Ammo.js Rigid Body",
+    "Shifting the center of mass for an asymmetric rigid body in Ammo.js requires a specific approach because the engine assumes the local origin of a rigid body is always its center of mass. This article explains how to use a compound shape (btCompoundShape)",
+    false
+  ],
+  [
+    127,
+    "How Angular Damping Prevents Infinite Rotation in Ammo.js",
+    "This article explains how angular damping functions within the ammo.js physics engine to stop 3D objects from rotating indefinitely. You will learn the underlying physics principles of rotational resistance, how the engine calculates velocity decay over",
+    false
+  ],
+  [
+    126,
+    "How to Simulate Air Resistance in Ammo.js",
+    "Simulating realistic environmental forces like air resistance is crucial for accurate physics simulations. This article provides a straightforward guide on how to adjust the linear damping property of rigid bodies in ammo.js to mimic drag, explaining the",
+    false
+  ],
+  [
+    125,
+    "How to Apply Local Force in Ammo.js",
+    "When developing physics-based simulations or games using the ammo.js physics engine, you frequently need to apply forces relative to an object's local orientation—such as pushing a spaceship forward along its own nose direction. Because ammo.js does no",
+    false
+  ],
+  [
+    124,
+    "Configure Anisotropic Friction in Ammo.js",
+    "This article explains how to configure anisotropic friction for specialized surfaces using ammo.js, the JavaScript port of the Bullet physics engine. You will learn how to define directional friction coefficients, enable the necessary collision flags, an",
+    false
+  ],
+  [
+    123,
+    "Configure Spinning Friction in Ammo.js",
+    "Simulating realistic spinning objects like tops in ammo.js requires a specific combination of physical properties to prevent them from spinning infinitely or sliding unrealistically. This article demonstrates how to configure spinning friction, rolling f",
+    false
+  ],
+  [
+    122,
+    "Difference Between Rolling and Sliding Friction in Ammo.js",
+    "In ammo.js—the JavaScript port of the Bullet physics engine—simulating realistic physical interactions requires a clear understanding of how different forces oppose motion. This article explains the practical and mathematical differences between stan",
+    false
+  ],
+  [
+    121,
+    "Apply Angular Torque to Ammo.js Rigid Body",
+    "This article explains how to apply angular torque to a rigid body in Ammo.js, the JavaScript port of the Bullet physics engine. You will learn the difference between continuous torque and torque impulses, how to wake up sleeping physics bodies, and how t",
+    false
+  ],
+  [
+    120,
+    "Ammo.js btBvhTriangleMeshShape Physics Tunneling",
+    "In physics simulations using Ammo.js (the JavaScript port of the Bullet physics engine), fast-moving rigid bodies can sometimes pass completely through static 3D environments. This phenomenon is known as physics tunneling. When using a highly detailed bt",
+    false
+  ],
+  [
+    119,
+    "Non-Uniform Scaling for Ammo.js Collision Shapes",
+    "This article explains how to apply non-uniform local scaling to collision shapes in ammo.js, the JavaScript port of the Bullet physics engine. You will learn how to use the built-in scaling methods, update the physics world to reflect these changes, and",
+    false
+  ],
+  [
+    118,
+    "Ammo.js Heightfield vs Static Triangle Mesh Performance",
+    "This article compares the performance differences between btHeightfieldTerrainShape and static triangle meshes (btBvhTriangleMeshShape) in ammo.js. When building physics for 3D web applications, choosing the right shape for terrain and environment collis",
+    false
+  ],
+  [
+    117,
+    "Ammo.js Bounding Box for Custom Triangle Mesh",
+    "This article explains how the ammo.js physics engine calculates the Axis-Aligned Bounding Box (AABB) for custom triangle meshes. It covers the underlying Bullet Physics mechanisms, the role of Bounding Volume Hierarchies (BVH), and how to programmaticall",
+    false
+  ],
+  [
+    116,
+    "How to Change Ammo.js Collision Shapes at Runtime",
+    "In ammo.js, a standard rigid body cannot have its collision shape swapped instantly while it is actively participating in the physics simulation. However, you can dynamically change a rigid body's collision shape during runtime by temporarily removing th",
+    false
+  ],
+  [
+    115,
+    "How to Use and Scale btMultiSphereShape in Ammo.js",
+    "This article provides a direct guide on how to instantiate and scale a btMultiSphereShape within an Ammo.js physics simulation. You will learn how to define multiple spheres with distinct positions and radii to create complex composite collision shapes,",
+    false
+  ],
+  [
+    114,
+    "Ammo.js btConeShape Use Cases",
+    "This article provides an overview of when and why to use the btConeShape collision geometry within the ammo.js physics library. It highlights specific practical applications—ranging from environment hazards to sensory detection zones—and explains why",
+    false
+  ],
+  [
+    113,
+    "Create an Infinite Floor in ammo.js with btStaticPlaneShape",
+    "This article explains how to create an infinite static floor in a 3D physics simulation using Ammo.js (the Emscripten port of the Bullet physics engine) and btStaticPlaneShape. You will learn how to define the plane's normal vector, configure its offset,",
+    false
+  ],
+  [
+    112,
+    "Efficient Massive Heightfield Terrain in Ammo.js",
+    "Generating massive heightfield terrains in web-based physics engines can quickly bottleneck CPU performance and exhaust WebAssembly memory limits. To achieve maximum efficiency when creating large-scale terrains in ammo.js (the Emscripten port of Bullet",
+    false
+  ],
+  [
+    111,
+    "How to Create a Dynamic Capsule Collision Shape in Ammo.js",
+    "This article explains how to construct a dynamic capsule collision shape for a character in ammo.js, the JavaScript port of the Bullet physics engine. You will learn how to define the capsule geometry, compute its inertia, lock its rotation for upright c",
+    false
+  ],
+  [
+    110,
+    "Prevent Ammo.js Raycast Vehicle From Flipping",
+    "This article explains the standard, most effective methods for stabilizing an ammo.js raycast vehicle to prevent it from flipping over during high-speed turns. You will learn how to manipulate the wheel roll influence, adjust the center of mass using com",
+    false
+  ],
+  [
+    109,
+    "Configure Ammo.js Vehicle Suspension",
+    "This article explains how to configure suspension stiffness and damping compression for a vehicle in the ammo.js physics engine. By adjusting these parameters on the vehicle's wheel objects, you can control how the vehicle reacts to bumps, jumps, and wei",
+    false
+  ],
+  [
+    108,
+    "Simulate Tank Tracks with Ammo.js Constraints",
+    "Simulating tracked vehicles like tanks in 3D physics engines can be challenging due to the complexity of treads. This article provides a straightforward guide on how to simulate a tank using Ammo.js (the JavaScript port of the Bullet Physics engine) by l",
+    false
+  ],
+  [
+    107,
+    "Understanding btVehicleRaycaster in Ammo.js Vehicles",
+    "In ammo.js—the WebGL-compatible port of the Bullet physics engine—setting up a realistic vehicle requires a specialized approach to handling wheel-to-ground collisions. Rather than using complex rigid body shapes for wheels, ammo.js utilizes a raycas",
+    false
+  ],
+  [
+    106,
+    "How to Apply Brake Friction in Ammo.js",
+    "This article explains how brake friction is applied to individual wheels within the Ammo.js physics engine's vehicle system. It covers the mechanics of the raycast vehicle model, the specific API methods used to trigger braking, and how these forces tran",
+    false
+  ],
+  [
+    105,
+    "Calculate Wheel Position in Ammo.js Vehicle",
+    "This article explains how to calculate and retrieve the exact global position and rotation of a spinning wheel in an ammo.js raycast vehicle. By utilizing the built-in vehicle physics engine methods, you can accurately track wheel coordinates and orienta",
+    false
+  ],
+  [
+    104,
+    "Steering Input for ammo.js btRaycastVehicle",
+    "Controlling a vehicle in a 3D physics engine requires translating keyboard or controller inputs into precise wheel angles. This article explains how to correctly handle steering input for a btRaycastVehicle in ammo.js, covering the API methods, clamping",
+    false
+  ],
+  [
+    103,
+    "Apply Engine Force to Ammo.js Vehicle Wheels",
+    "This article explains how to apply engine force to specific wheels of a raycast vehicle using the ammo.js physics library. You will learn how wheel indexing works within the btRaycastVehicle class and how to programmatically control individual wheels to",
+    false
+  ],
+  [
+    102,
+    "Ammo.js Vehicle Suspension Tuning Guide",
+    "Configuring realistic vehicle physics in a 3D browser application requires a precise setup of the wheel suspension system. In ammo.js (the JavaScript port of the Bullet physics engine), the btRaycastVehicle class relies on several key suspension paramete",
+    false
+  ],
+  [
+    101,
+    "Implement a Car with Ammo.js btRaycastVehicle",
+    "This guide explains how to implement a robust, physics-driven car in JavaScript using the btRaycastVehicle class from ammo.js, the Emscripten port of the Bullet Physics engine. You will learn how to configure the rigid body chassis, set up raycast wheels",
+    false
+  ],
+  [
+    100,
+    "Ammo.js Documentation for Advanced Web Developers",
+    "Web developers looking to implement advanced physics simulations with ammo.js often find that JavaScript-specific documentation is scarce. Since ammo.js is a direct Emscripten port of the C++ Bullet Physics engine, mastering its advanced features require",
+    false
+  ],
+  [
+    99,
+    "Access Collision Manifold Points in Ammo.js",
+    "In physics simulations using ammo.js (the Emscripten port of Bullet Physics), detecting and processing collisions requires accessing the contact manifolds generated by the physics dispatcher. This article provides a direct, step-by-step guide on how to i",
+    false
+  ],
+  [
+    98,
+    "Ammo.js CCD Configuration for Fast Objects",
+    "In high-speed physics simulations, fast-moving rigid bodies like projectiles often suffer from \"tunneling,\" an issue where an object passes completely through solid obstacles between simulation frames. This article explains how to successfully configure",
+    false
+  ],
+  [
+    97,
+    "Implementing Buoyancy in Ammo.js Physics",
+    "This article explores how the ammo.js physics library handles experimental buoyancy and basic fluid interactions. Because ammo.js is a direct JavaScript port of the C++ Bullet Physics engine, it focuses primarily on rigid body dynamics and does not featu",
+    false
+  ],
+  [
+    96,
+    "Implementing btKinematicCharacterController in Ammo.js",
+    "This article provides a step-by-step guide on how to successfully implement a kinematic character controller using btKinematicCharacterController in Ammo.js, the JavaScript port of the Bullet physics engine. You will learn how to configure the necessary",
+    false
+  ],
+  [
+    95,
+    "How to Simulate Custom Gravity per Object in ammo.js",
+    "This article explains how to bypass the global gravity settings in the ammo.js physics engine to simulate highly customizable directional gravity for specific individual objects. You will learn how to override default physics world behaviors, apply stati",
+    false
+  ],
+  [
+    94,
+    "Convex Sweep Testing in Ammo.js Explained",
+    "This article explains the concept of convex sweep testing, a continuous collision detection technique used to prevent fast-moving objects from passing through obstacles. We will define what a convex sweep test is and explore its mathematical implementati",
+    false
+  ],
+  [
+    93,
+    "Filter Raycast Hits with Collision Groups in Ammo.js",
+    "In ammo.js, performing efficient raycasting often requires ignoring specific physics bodies, such as triggers, invisible boundaries, or the shooter's own character. This article explains how to strategically filter raycast hits by leveraging Bullet's nat",
+    false
+  ],
+  [
+    92,
+    "Ammo.js Closest Hit vs All Hits Raycast",
+    "In 3D physics simulations powered by Ammo.js—the JavaScript port of the Bullet physics engine—raycasting is a critical tool for detecting intersections along a line segment. This article outlines the functional differences between a closest hit rayca",
+    false
+  ],
+  [
+    91,
+    "Ammo.js Raycast Tutorial: Detect Physics Objects",
+    "Raycasting is a fundamental technique in 3D physics engines used to detect collisions, query the environment, and handle user interactions like clicking on objects. This article provides a step-by-step guide on how to construct and perform a spatial rayc",
+    false
+  ],
+  [
+    90,
+    "Compute 3D Vector Cross Product with Ammo.js",
+    "This article demonstrates how to programmatically calculate the cross product of two 3D vectors using the Ammo.js physics engine in JavaScript. You will learn how to instantiate 3D vector objects, use the built-in mathematical functions provided by the l",
+    false
+  ],
+  [
+    89,
+    "Why Manual Memory Management in Ammo.js WebAssembly",
+    "Ammo.js, a WebAssembly (Wasm) port of the Bullet physics engine, requires developers to manually delete allocated math objects using Ammo.destroy(). While JavaScript is a garbage-collected language, the WebAssembly virtual machine operates on a separate,",
+    false
+  ],
+  [
+    88,
+    "How to Set Identity Transform in Ammo.js",
+    "This article explains how to definitively reset a rigid body's position and rotation to the default identity state in the Ammo.js physics engine. You will learn the exact API calls required to update the body's world transform, synchronize its motion sta",
+    false
+  ],
+  [
+    87,
+    "Extract Rotation Matrix from Ammo.js Transform",
+    "Extracting the rotation matrix from an Ammo.js transform object is crucial for synchronizing physics simulations with 3D rendering engines like Three.js. This article explains how to correctly retrieve this rotation data by accessing the transform's basi",
+    false
+  ],
+  [
+    86,
+    "How to Use btTransform in Ammo.js",
+    "This article explains the fundamental role of btTransform in Ammo.js, the WebAssembly port of the Bullet physics engine. You will learn what a btTransform is, how it represents spatial data, and how to use it to set, update, and synchronize the positions",
+    false
+  ],
+  [
+    85,
+    "Convert Euler Angles to Ammo.js Quaternion",
+    "This article provides a straightforward guide on how to reliably convert standard Euler angles (pitch, yaw, and roll) into a valid Ammo.js quaternion. We will explore the native Ammo.js API method, demonstrate a common integration path using Three.js, an",
+    false
+  ],
+  [
+    84,
+    "ammo.js btQuaternion: Representing 3D Rotations",
+    "This article explores how ammo.js, the JavaScript port of the Bullet physics engine, natively represents 3D spatial rotations using the btQuaternion class. We will break down the mathematical structure of quaternions, demonstrate how to instantiate and m",
+    false
+  ],
+  [
+    83,
+    "Calculate Distance Between Two btVector3 in Ammo.js",
+    "This article explains how to accurately calculate the 3D mathematical distance between two btVector3 points in ammo.js, the JavaScript port of the Bullet Physics engine. You will learn the two primary ways to achieve this: using the built-in native Ammo.",
+    false
+  ],
+  [
+    82,
+    "Multiply a Vector by a Scalar in Ammo.js",
+    "This article explains how to correctly multiply a 3D vector by a numeric scalar in the ammo.js physics library. You will learn the correct syntax using both the built-in Emscripten operator binding and an alternative in-place multiplication method design",
+    false
+  ],
+  [
+    81,
+    "Create and Manipulate btVector3 in Ammo.js",
+    "This guide explains how to properly create, read, modify, and destroy btVector3 spatial objects in Ammo.js, the WebAssembly port of the Bullet physics engine. You will learn the correct syntax for vector operations and crucial memory management technique",
+    false
+  ],
+  [
+    80,
+    "Why Ammo.js WebAssembly is Faster than JavaScript",
+    "This article analyzes how the WebAssembly (Wasm) build of ammo.js—the Emscripten-ported Bullet physics engine—delivers superior execution speed compared to standard JavaScript. We examine the core architectural advantages of WebAssembly, focusing on",
+    false
+  ],
+  [
+    79,
+    "btDbvtBroadphase vs btAxisSweep3 in Ammo.js",
+    "This article compares the architectural differences, underlying algorithms, and use cases of btDbvtBroadphase and btAxisSweep3 within the Ammo.js physics engine. Understanding these differences is critical for optimizing collision detection performance i",
+    false
+  ],
+  [
+    78,
+    "Clean Up and Dispose Ammo.js Physics World",
+    "This article provides a step-by-step guide on how to safely and completely dispose of an Ammo.js physics world when transitioning between application scenes. Because Ammo.js is a WebAssembly (Wasm) or Emscripten port of the C++ Bullet Physics library, Ja",
+    false
+  ],
+  [
+    77,
+    "Profile Physics Calculation Times in ammo.js",
+    "This article explores whether ammo.js contains built-in methods to profile its internal physics calculation times. While the underlying C++ Bullet Physics engine features robust internal profiling systems, these are not exposed by default in the Emscript",
+    false
+  ],
+  [
+    76,
+    "Ammo.js Sub-step Count CPU Performance Impact",
+    "This article examines how drastically increasing the sub-step count in the ammo.js physics engine affects CPU performance. It explains the relationship between sub-stepping and CPU load, details why simulation complexity multiplies with higher step count",
+    false
+  ],
+  [
+    75,
+    "Understanding ammo.js stepSimulation and Accuracy",
+    "This article explains how the stepSimulation method functions within the ammo.js physics engine and explores how its three primary parameters control the accuracy, stability, and performance of 3D physics. By understanding how to configure these paramete",
+    false
+  ],
+  [
+    74,
+    "Optimize Ammo.js Performance with Physics Sleeping",
+    "Ammo.js, the WebAssembly port of the Bullet physics engine, can quickly become a performance bottleneck in complex 3D web applications. This article provides a guide on how to utilize physics sleeping states—also known as rigid body deactivation—to h",
+    false
+  ],
+  [
+    73,
+    "Ammo.js btDefaultCollisionConfiguration Memory Guide",
+    "This article provides an overview of btDefaultCollisionConfiguration in ammo.js, explaining its role in collision detection setup and its direct impact on WebAssembly memory allocation. You will learn how this configuration class manages internal memory",
+    false
+  ],
+  [
+    72,
+    "Why Cache ammo.js Objects in the Render Loop",
+    "When building interactive 3D applications with WebGL, maintaining a smooth frame rate of 60 frames per second is essential for a good user experience. Inside the primary render loop, performance is critical, and how you handle physics calculations can ma",
+    false
+  ],
+  [
+    71,
+    "Prevent Ammo.js Vector and Quaternion Memory Leaks",
+    "Ammo.js, the WebAssembly port of the Bullet physics engine, requires manual memory management because JavaScript's garbage collector cannot automatically free memory allocated on the WebAssembly heap. This article provides a direct guide on how to strict",
+    false
+  ],
+  [
+    70,
+    "Understanding btSoftBodyHelpers in Ammo.js",
+    "This article explores the specific role of the btSoftBodyHelpers utility class within the ammo.js physics engine. It explains how this helper class simplifies the complex process of creating and managing deformable physical objects, such as cloth, ropes,",
+    false
+  ],
+  [
+    69,
+    "Update Render Mesh Vertices from Ammo.js Soft Body",
+    "This article provides a step-by-step guide on how to systematically synchronize a 3D render mesh with the physics calculations of an Ammo.js soft body. You will learn how to map the vertices of a rendering engine's mesh (such as Three.js) to the nodes of",
+    false
+  ],
+  [
+    68,
+    "Ammo.js Soft Body Simulation CPU Performance Cost",
+    "This article examines the CPU performance impact of running multiple soft body simulations in ammo.js, the WebAssembly port of the Bullet physics engine. We will explore why soft bodies are computationally demanding, outline expected performance limits o",
+    false
+  ],
+  [
+    67,
+    "Simulate a Volumetric Soft Body in Ammo.js",
+    "This article provides a step-by-step guide on how to simulate a volumetric soft body, such as a bouncing jelly sphere, using the Ammo.js physics engine. You will learn how to configure a soft body physics world, generate an ellipsoid soft body, tweak phy",
+    false
+  ],
+  [
+    66,
+    "Ammo.js Soft Body and Rigid Body Collisions",
+    "This article provides an overview of how the ammo.js physics engine calculates and resolves collisions between soft bodies and rigid bodies. It covers the underlying mechanics of node-based collision detection, impulse-based resolution, anchoring, and th",
+    false
+  ],
+  [
+    65,
+    "Controlling Soft Body Stiffness in Ammo.js",
+    "This article provides an overview of the key mathematical parameters and configuration settings used in ammo.js (the JavaScript port of the Bullet physics engine) to control the deformation, stiffness, and structural integrity of soft bodies. By understa",
+    false
+  ],
+  [
+    64,
+    "Anchor Soft Body to Rigid Body in Ammo.js",
+    "In physics simulations using Ammo.js (the JavaScript port of the Bullet Physics engine), attaching soft bodies like ropes, capes, or flags to standard rigid bodies is a common requirement. This article provides a direct, step-by-step guide on how to secu",
+    false
+  ],
+  [
+    63,
+    "Create Realistic Cloth Simulation with Ammo.js",
+    "This article provides a step-by-step technical guide on how to create a highly realistic cloth simulation using Ammo.js, the WebAssembly port of the Bullet physics engine. It covers setting up a soft body physics world, generating the cloth geometry, con",
+    false
+  ],
+  [
+    62,
+    "Initialize Soft Body Physics in Ammo.js",
+    "This article provides a direct, step-by-step guide on how to initialize a specialized soft body physics world in Ammo.js, the JavaScript port of the Bullet Physics engine. You will learn about the specific classes required to support soft body dynamics",
+    false
+  ],
+  [
+    61,
+    "Does Ammo.js Support Soft Body Dynamics?",
+    "This article explains whether the standard build of ammo.js supports soft body dynamics out of the box. It covers the default capabilities of the library, the specific components required to implement soft bodies, and key performance considerations for w",
+    false
+  ],
+  [
+    60,
+    "Connecting Multiple Rigid Bodies in Ammo.js",
+    "This article explains how to connect multiple rigid bodies within the Ammo.js physics engine, addressing whether a single complex constraint can link more than two bodies. It covers the inherent limitations of standard Ammo.js constraints, provides the i",
+    false
+  ],
+  [
+    59,
+    "Ammo.js Solver Iterations and Constraint Stability",
+    "This article explains how the solver iteration count directly influences the stability, behavior, and performance of physical constraints within an ammo.js physics world. You will learn the mechanics behind constraint solving, the consequences of low ver",
+    false
+  ],
+  [
+    58,
+    "Adjust Joint Breaking Threshold in Ammo.js",
+    "This article provides a straightforward guide on how to configure and manage the breaking threshold of physical joints (constraints) in ammo.js, the JavaScript port of the Bullet Physics engine. You will learn how to set the impulse limits that trigger j",
+    false
+  ],
+  [
+    57,
+    "Ammo.js Cone-Twist Constraint Applications",
+    "This article explores the practical mechanical applications of the cone-twist constraint within the ammo.js physics engine. It details how this specialized constraint mimics real-world mechanical joints by limiting angular motion, and examines its implem",
+    false
+  ],
+  [
+    56,
+    "Implementing Motorized Hinges in Ammo.js",
+    "This article explains how to effectively implement motorized hinges in web-based 3D applications using native ammo.js constraints. You will learn how to set up a btHingeConstraint, configure its angular motor parameters, define rotational limits, and dyn",
+    false
+  ],
+  [
+    55,
+    "Remove or Break Constraints Dynamically in Ammo.js",
+    "This article explains how to systematically break and remove active constraints in the Ammo.js physics engine during runtime. You will learn the correct APIs for removing constraints from the dynamics world, how to safely deallocate WebAssembly memory to",
+    false
+  ],
+  [
+    54,
+    "Ammo.js 6 Degrees of Freedom Constraint Parameters",
+    "This article explains how to configure a 6 Degrees of Freedom (6DoF) constraint in the ammo.js physics engine. It details the required constructor arguments, transform frames, and limit-setting parameters necessary to precisely control the translational",
+    false
+  ],
+  [
+    53,
+    "Ammo.js Slider Constraint for Linear Movement",
+    "This article provides a step-by-step guide on how to implement a slider constraint (btSliderConstraint) in ammo.js to restrict a physics body's movement to a single linear axis. We will cover initializing the constraint, configuring its linear limits, lo",
+    false
+  ],
+  [
+    52,
+    "How to Configure Hinge Constraints in Ammo.js",
+    "This article explains the concept of a hinge constraint in the ammo.js physics engine and provides a clear guide on how to configure its rotation axis. You will learn what a hinge constraint is, how it restricts movement between rigid bodies, and how to",
+    false
+  ],
+  [
+    51,
+    "How to Create Ball and Socket Constraints in Ammo.js",
+    "This guide explains how to implement a functional point-to-point (P2P)—commonly known as a ball-and-socket—constraint in Ammo.js, the WebAssembly/JavaScript port of the Bullet physics engine. You will learn the core concepts behind the constraint, th",
+    false
+  ],
+  [
+    50,
+    "Detect Collisions Between Two Bodies in Ammo.js",
+    "Detecting collisions and retrieving exact contact points between specific physical bodies is a fundamental task in ammo.js game development. This article provides a straightforward guide on how to implement reliable collision detection using the physics",
+    false
+  ],
+  [
+    49,
+    "What is a Ghost Object in Ammo.js",
+    "This article explains the concept of ghost objects in Ammo.js, a powerful 3D physics engine for the web. It defines what a ghost object is, explores how it functions within a physics simulation, and outlines the specific development scenarios where you s",
+    false
+  ],
+  [
+    48,
+    "Define a Cylinder Collision Shape in Ammo.js",
+    "This article provides a straightforward guide on how to correctly define and implement a cylinder collision shape using ammo.js, the JavaScript port of the Bullet physics engine. You will learn how to configure the dimensions, select the correct alignmen",
+    false
+  ],
+  [
+    47,
+    "What Is a Convex Hull Shape in Ammo.js",
+    "This article explains the concept of a convex hull collision shape in 3D physics and provides a step-by-step guide on how to generate one natively using the ammo.js physics engine. You will learn what makes convex hulls ideal for performance-friendly col",
+    false
+  ],
+  [
+    46,
+    "Create Complex Compound Collision Shapes in Ammo.js",
+    "Implementing complex collision detection in 3D web applications often requires shapes that standard primitives cannot represent. This article provides a step-by-step guide on how to successfully create and implement a complex compound collision shape in",
+    false
+  ],
+  [
+    45,
+    "Understanding btBvhTriangleMeshShape in Ammo.js",
+    "This article provides a comprehensive guide to the btBvhTriangleMeshShape class in Ammo.js, explaining its primary purpose, how it functions under the hood, and its optimal use cases in WebGL physics simulations. You will learn why this shape is essentia",
+    false
+  ],
+  [
+    44,
+    "How to Use Ammo.js Collision Groups and Masks",
+    "This article explains how Ammo.js, the JavaScript port of the Bullet physics engine, manages collision filtering. You will learn how collision groups and masks work mathematically using bitwise operations, how to define them in JavaScript, and how to app",
+    false
+  ],
+  [
+    43,
+    "Ammo.js Performance: Spheres vs Complex Box Shapes",
+    "When building 3D physics simulations on the web using ammo.js—the Emscripten port of the Bullet physics engine—choosing the right collision shapes is critical for maintaining high frame rates. This article analyzes the performance differences between",
+    false
+  ],
+  [
+    42,
+    "How to Create a Box Collision Shape in Ammo.js",
+    "This guide explains how to instantiate a simple box collision shape in the ammo.js physics engine. You will learn how to define the shape's dimensions using half-extents, initialize the physics object, and properly manage memory to prevent leaks in your",
+    false
+  ],
+  [
+    41,
+    "Ammo.js Broadphase Collision Detection Role",
+    "This article explains the critical role of the broadphase collision detection phase within the ammo.js physics engine. It explores how this initial filtering step optimizes performance in WebGL and 3D web applications by quickly identifying potential col",
+    false
+  ],
+  [
+    40,
+    "How to Adjust Restitution in Ammo.js",
+    "This article explains how to configure and adjust the restitution—commonly referred to as bounciness—of rigid bodies in the ammo.js physics engine. You will learn how to set the restitution coefficient on a physical body, how ammo.js calculates bounc",
+    false
+  ],
+  [
+    39,
+    "Configure Friction in Ammo.js Rigid Body",
+    "Configuring the friction coefficient of an individual rigid body in ammo.js is essential for controlling how physical objects slide and interact within your 3D physics simulation. This article provides a direct guide on how to set and adjust this propert",
+    false
+  ],
+  [
+    38,
+    "How to Teleport an Ammo.js Rigid Body",
+    "This article explains how to instantly teleport a rigid body to a new coordinate position using the ammo.js physics library. You will learn the exact sequence of API calls required to update the body's position, clear its existing momentum, and force the",
+    false
+  ],
+  [
+    37,
+    "Limit Angular Velocity in Ammo.js",
+    "This article explains the precise methods used to restrict and control the angular velocity of rigid bodies in the ammo.js physics engine. You will learn how to limit rotational speed using manual velocity clamping, restrict rotation to specific axes usi",
+    false
+  ],
+  [
+    36,
+    "Limit Linear Velocity in Ammo.js",
+    "Controlling the speed of moving objects is crucial for maintaining stable and realistic physics simulations in games and interactive 3D applications. This article explains the two most effective methods to limit the maximum linear velocity of a rigid bod",
+    false
+  ],
+  [
+    35,
+    "Set Mass and Local Inertia of Ammo.js Rigid Body",
+    "This article explains how to set the mass and calculate the local inertia of a new rigid body in Ammo.js. You will learn how to initialize these physical properties using a collision shape, calculate the inertia vector, and apply them during the creation",
+    false
+  ],
+  [
+    34,
+    "How to Apply Impulse in Ammo.js Mathematically",
+    "This article explains the mathematically correct way to apply a sudden impulse to an ammo.js rigid body to achieve a precise velocity change. You will learn the underlying physics formulas, how ammo.js handles impulses under the hood, and the exact JavaS",
+    false
+  ],
+  [
+    33,
+    "Apply Continuous Force to Ammo.js Rigid Body",
+    "Applying a continuous directional force to an ammo.js rigid body requires consistently invoking physics force methods within your application's simulation update loop. This article explains how to use the applyCentralForce method, manage the rigid body's",
+    false
+  ],
+  [
+    32,
+    "Dynamic vs Kinematic Rigid Bodies in Ammo.js",
+    "This article explains the technical differences between dynamic and kinematic rigid bodies in the ammo.js physics engine. You will learn how each body type is simulated, how they interact with the physics world, and the specific API calls and flags requi",
+    false
+  ],
+  [
+    31,
+    "Create a Static Rigid Body in Ammo.js",
+    "Creating a perfectly static rigid body in ammo.js—the JavaScript port of the Bullet physics engine—is essential for building immovable environment colliders like floors, walls, and obstacles. This guide provides a direct, step-by-step walkthrough on",
+    false
+  ],
+  [
+    30,
+    "Implementing Ammo.js Debug Drawer in Custom Renderer",
+    "Visualizing physics colliders is crucial for debugging 3D simulations. This article provides a step-by-step guide on how to implement a visual physics debug drawer for the Ammo.js physics engine inside a custom WebGL or Three.js renderer. You will learn",
+    false
+  ],
+  [
+    29,
+    "Ammo.js Physics Rendering Performance Bottlenecks",
+    "Integrating the ammo.js physics engine—a WebAssembly port of the powerful Bullet physics library—into web applications often introduces significant rendering and simulation bottlenecks. This article examines the primary performance limiters encounter",
+    false
+  ],
+  [
+    28,
+    "A-Frame Physics with Ammo.js for VR",
+    "Creating realistic physical interactions is essential for building immersive Virtual Reality (VR) experiences on the web. This article explains how A-Frame, the web framework for 3D and VR, incorporates ammo.js—a direct JavaScript port of the powerful",
+    false
+  ],
+  [
+    27,
+    "Using Ammo.js in Node.js Server Environments",
+    "This article explores how to successfully integrate and run the Ammo.js physics engine within a Node.js server environment. You will learn about the compatibility of Ammo.js with Node.js, how to handle its asynchronous WebAssembly initialization, how to",
+    false
+  ],
+  [
+    26,
+    "Frame Rate Independence in Ammo.js Physics",
+    "Achieving consistent physics simulations across different devices and frame rates is a crucial aspect of web-based 3D development. This article explains how to implement frame rate independence in an ammo.js physics simulation, ensuring that gravity, col",
+    false
+  ],
+  [
+    25,
+    "Ammo.js Physics Loop with requestAnimationFrame",
+    "This article explains how to set up and optimize the standard physics update loop when integrating the Ammo.js physics engine with JavaScript's requestAnimationFrame. You will learn how to calculate frame delta times, step the physics simulation accurate",
+    false
+  ],
+  [
+    24,
+    "How to Map Ammo.js Quaternion to Three.js",
+    "This article explains how to efficiently synchronize rotation data between the Ammo.js physics engine and the Three.js 3D library. You will learn the best practices for copying quaternion data from Ammo.js to Three.js, focusing on performance optimizatio",
+    false
+  ],
+  [
+    23,
+    "Using ammo.js with Raw WebGL",
+    "This article explains how to integrate ammo.js, a powerful JavaScript port of the Bullet physics engine, directly with raw WebGL without relying on external 3D rendering libraries like Three.js or Babylon.js. We will explore the feasibility of this appro",
+    false
+  ],
+  [
+    22,
+    "Best Practices for Integrating ammo.js with Babylon.js",
+    "Integrating ammo.js with Babylon.js enables developers to run advanced, hardware-accelerated physics simulations—including soft body dynamics and complex rope physics—directly in the browser. This article covers the essential best practices for setti",
+    false
+  ],
+  [
+    21,
+    "How to Sync Three.js Meshes with Ammo.js Rigid Bodies",
+    "Synchronizing Three.js meshes with Ammo.js rigid bodies is essential for creating realistic 3D physics simulations in the browser. This article explains how to link your visual 3D models with their physical representations and update their positions and",
+    false
+  ],
+  [
+    20,
+    "What is the WebIDL bindings file in ammo.js",
+    "This article explains the purpose and functionality of the WebIDL bindings file within the ammo.js source repository. It describes how this file bridges the gap between C++ and JavaScript, enabling the Bullet physics engine to run seamlessly in web brows",
+    false
+  ],
+  [
+    19,
+    "How Ammo.js Maps Pointers to JavaScript Objects",
+    "This article explains how ammo.js bridges the gap between high-level JavaScript and low-level C++ memory management. You will learn how WebAssembly pointers map to JavaScript wrapper objects, how data is read from the heap, and how to properly manage thi",
+    false
+  ],
+  [
+    18,
+    "Role of Web Workers in ammo.js Physics",
+    "Running physics simulations in web browsers can be highly resource-intensive, often leading to sluggish animations and unresponsive user interfaces. This article explains how Web Workers optimize ammo.js simulations by offloading complex physics calculat",
+    false
+  ],
+  [
+    17,
+    "Loading Ammo.js Asynchronously in Web Browsers",
+    "This article explains how the 3D physics library ammo.js handles asynchronous loading within modern web browser environments. Because ammo.js is a WebAssembly (Wasm) port of the C++ Bullet Physics engine, it cannot be run synchronously upon script inject",
+    false
+  ],
+  [
+    16,
+    "How to Expose C++ Bullet Classes to Ammo.js",
+    "This article explains how to expose missing C++ Bullet Physics classes to ammo.js, the direct port of the Bullet engine to JavaScript using Emscripten. You will learn how to locate the WebIDL definition file, define missing C++ classes and methods, and r",
+    false
+  ],
+  [
+    15,
+    "Purpose of the Ammo.js Destroy Function Explained",
+    "This article explains the purpose of the destroy function in ammo.js, a popular WebAssembly physics engine used in web development. We will explore why manual memory management is necessary in this JavaScript library, how failing to use this function cau",
+    false
+  ],
+  [
+    14,
+    "Why Ammo.js Requires Manual Memory Management",
+    "This article explains why developers must manually manage memory when using ammo.js, a popular 3D physics engine for the web. While JavaScript typically handles memory automatically through garbage collection, ammo.js operates under a different architect",
+    false
+  ],
+  [
+    13,
+    "Garbage Collection in Ammo.js Explained",
+    "This article provides a comprehensive overview of how memory management and garbage collection operate within the ammo.js physics engine. Because ammo.js is a direct port of the C++ Bullet Physics library, it does not rely on standard JavaScript garbage",
+    false
+  ],
+  [
+    12,
+    "AmmoJS Challenges as a Translated C++ Codebase",
+    "This article explores the specific technical challenges that arise from using ammo.js, a popular 3D physics engine for the web that is compiled directly from the C++ Bullet Physics library using Emscripten. We will examine how this automated translation",
+    false
+  ],
+  [
+    11,
+    "How Emscripten Facilitates Creating Ammo.js",
+    "This article explores the critical role Emscripten plays in the creation of ammo.js, a popular 3D physics engine for the web. By compiling the original C++ Bullet Physics engine into WebAssembly and JavaScript, Emscripten enables developers to run high-p",
+    false
+  ],
+  [
+    10,
+    "Deterministic Physics in Ammo.js Across Devices",
+    "Achieving deterministic physics across different devices using ammo.js—the JavaScript port of the C++ Bullet Physics engine—presents unique challenges due to platform-specific hardware and browser runtime variations. This article explores how ammo.js",
+    false
+  ],
+  [
+    9,
+    "What Does Ammo.js Stand For",
+    "This article explains the origin and meaning behind the name of ammo.js, a popular physics engine used in web development. It covers the thematic connection to its parent library, the Bullet physics engine, and details the specific acronym that the name",
+    false
+  ],
+  [
+    8,
+    "Who Created and Maintains Ammo.js",
+    "This article provides a concise overview of the origins and ongoing maintenance of ammo.js, a widely used 3D physics library for web development. It details the original creator of the project, how the library was developed, and who is responsible for it",
+    false
+  ],
+  [
+    7,
+    "WebAssembly vs asm.js in ammo.js",
+    "This article compares the WebAssembly (Wasm) and asm.js builds of ammo.js, the Emscripten-ported version of the Bullet physics engine. We will break down the key differences between these two builds in terms of performance, file size, loading times, memo",
+    false
+  ],
+  [
+    6,
+    "How to Load ammo.js in a Modern Web Application",
+    "Integrating the 3D physics engine ammo.js into modern web applications requires handling its Emscripten-compiled WebAssembly (Wasm) codebase. This article explains the most common and efficient methods for loading ammo.js today, including asynchronous in",
+    false
+  ],
+  [
+    5,
+    "What Is the Typical File Size of Ammo.js",
+    "When integrating 3D physics into web applications, understanding the library's footprint is crucial for maintaining fast page load times. This article provides a breakdown of the typical file size of the ammo.js physics engine, compares its WebAssembly (",
+    false
+  ],
+  [
+    4,
+    "Can you use ammo.js for 2D physics?",
+    "While ammo.js is fundamentally a 3D physics engine, it is not strictly limited to 3D and can be configured to run 2D physics simulations. By constraining rigid body movement and rotation to a single two-dimensional plane, developers can successfully simu",
+    false
+  ],
+  [
+    3,
+    "Why Choose ammo.js Over Other JS Physics Engines",
+    "This article explores the primary advantages of using ammo.js for web-based 3D applications compared to other JavaScript physics engines. You will learn how its origin as a direct port of the Bullet C++ library provides unmatched feature completeness, hi",
+    false
+  ],
+  [
+    2,
+    "How Does Ammo.js Relate to Bullet Physics?",
+    "This article explores the direct relationship between ammo.js and the Bullet Physics engine, explaining how a powerful C++ physics library is brought to the web browser. It details the compilation process using Emscripten, the architectural similarities",
+    false
+  ],
+  [
+    1,
+    "What is Ammo.js in Web Development",
+    "This article provides an overview of ammo.js, explaining its primary purpose as a high-performance physics engine for web development. Readers will learn how ammo.js brings realistic 3D physics to the browser, its relationship with the Bullet physics lib",
+    false
+  ]
+]

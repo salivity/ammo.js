@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js stepSimulation Sequence of Events - ammo.js</title>
+    <meta name="description" content="When developing 3D applications with ammo.js (the Emscripten port of the Bullet Physics library), the stepSimulation method is the core driver of the physics world. This article breaks down the exact sequence of internal events and phases that occur duri">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-stepsimulation-sequence-of-events">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js stepSimulation Sequence of Events - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-stepsimulation-sequence-of-events" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When developing 3D applications with ammo.js (the Emscripten port of the Bullet Physics library), the stepSimulation method is the core driver of the physics world. This article breaks down the exact sequence of internal events and phases that occur duri" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-stepsimulation-sequence-of-events">Ammo.js stepSimulation
+Sequence of Events</h1>
+<p>When developing 3D applications with ammo.js (the Emscripten port of
+the Bullet Physics library), the <code>stepSimulation</code> method is
+the core driver of the physics world. This article breaks down the exact
+sequence of internal events and phases that occur during a single call
+to <code>stepSimulation</code>, including time integration, collision
+detection, constraint solving, and interpolation.</p>
+<p>When you call
+<code>dynamicsWorld.stepSimulation(timeStep, maxSubSteps, fixedTimeStep)</code>,
+the engine executes the following precise sequence of events:</p>
+<h3 id="1-sub-step-calculation-and-time-accumulation">1. Sub-step
+Calculation and Time Accumulation</h3>
+<p>Ammo.js does not simulate physics using variable frame rates, as this
+would cause unstable and non-deterministic behavior. Instead, it uses a
+fixed time step.</p>
+<ul>
+<li><strong>Accumulate Time:</strong> The engine adds the passed
+<code>timeStep</code> (usually the time elapsed since the last render
+frame) to an internal time accumulator.</li>
+<li><strong>Determine Sub-steps:</strong> The engine calculates how many
+fixed steps of size <code>fixedTimeStep</code> (default is 1/60th of a
+second) are required to match the accumulated time.</li>
+<li><strong>Clamp Steps:</strong> If the required number of steps
+exceeds <code>maxSubSteps</code>, the engine clamps the simulation to
+prevent the "spiral of death" (where physics lag slows down rendering,
+causing even more physics steps to be queued).</li>
+</ul>
+<h3 id="2-the-internal-single-step-loop">2. The Internal Single-Step
+Loop</h3>
+<p>For each calculated sub-step, ammo.js executes a single,
+self-contained simulation step. If the accumulated time is too small for
+a single sub-step, this loop is skipped, and the engine jumps straight
+to the interpolation phase. Within each individual sub-step, the
+following sequence occurs:</p>
+<ul>
+<li><strong>Apply External Forces:</strong> The engine applies gravity,
+wind, and any user-defined forces or torques to all active rigid bodies
+in the world.</li>
+<li><strong>Predict Unconstrained Motion:</strong> Based on current
+velocities and applied forces, the engine predicts where each rigid body
+<em>would</em> be at the end of the sub-step if there were no collisions
+or constraints. This is known as predictive integration.</li>
+<li><strong>Perform Broadphase Collision Detection:</strong> The engine
+performs a rapid, coarse check to find pairs of objects whose
+Axis-Aligned Bounding Boxes (AABB) overlap. This filters out pairs of
+objects that are too far apart to collide.</li>
+<li><strong>Perform Narrowphase Collision Detection:</strong> For each
+overlapping pair identified by the broadphase, the engine runs precise
+geometric algorithms (like GJK or EPA) to determine if they actually
+touch. If they do, the engine generates contact points, penetration
+depths, and collision normals, creating "contact manifolds."</li>
+<li><strong>Create and Solve Constraints (The Constraint
+Solver):</strong> The engine gathers all contact points and user-defined
+constraints (such as hinges, sliders, and joints) and passes them to the
+constraint solver (typically a Sequential Impulse Solver). The solver
+calculates the exact impulses required to resolve penetrations, handle
+friction, and keep joints from breaking.</li>
+<li><strong>Integrate Transforms (Update Positions):</strong> The engine
+applies the calculated impulses to the velocities of the rigid bodies.
+It then integrates these velocities to calculate the final, actual
+positions and rotations of the bodies for the current sub-step.</li>
+<li><strong>Clear Forces:</strong> The engine resets the accumulated
+forces and torques on the rigid bodies, preparing them for the next
+step.</li>
+</ul>
+<h3 id="3-state-interpolation">3. State Interpolation</h3>
+<p>Once the sub-step loop completes, there is almost always a small
+remainder of time left in the accumulator that was not enough to trigger
+another full fixed step.</p>
+<p>To prevent visual stuttering, ammo.js calculates an interpolation
+factor between 0 and 1 based on this remaining time. It then
+interpolates the positions and orientations of the rigid bodies between
+the previous physics state and the current physics state. This
+interpolated transform is what is exposed to your graphics renderer,
+ensuring smooth motion even when the rendering frame rate does not align
+perfectly with the physics simulation rate.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

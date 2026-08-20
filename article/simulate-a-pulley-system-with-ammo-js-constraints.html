@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulate a Pulley System with Ammo.js Constraints - ammo.js</title>
+    <meta name="description" content="Simulating a realistic pulley system in a 3D web application requires a physics engine capable of handling complex joint constraints. This article provides a step-by-step guide on how to create a functional pulley system using ammo.js, the WebAssembly po">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/simulate-a-pulley-system-with-ammo-js-constraints">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Simulate a Pulley System with Ammo.js Constraints - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/simulate-a-pulley-system-with-ammo-js-constraints" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Simulating a realistic pulley system in a 3D web application requires a physics engine capable of handling complex joint constraints. This article provides a step-by-step guide on how to create a functional pulley system using ammo.js, the WebAssembly po" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="simulate-a-pulley-system-with-ammojs-constraints">Simulate a
+Pulley System with Ammo.js Constraints</h1>
+<p>Simulating a realistic pulley system in a 3D web application requires
+a physics engine capable of handling complex joint constraints. This
+article provides a step-by-step guide on how to create a functional
+pulley system using ammo.js, the WebAssembly port of the Bullet physics
+engine. You will learn how to configure rigid bodies, implement
+constraints, and use a physics tick callback to enforce the coupling
+behavior of a pulley rope.</p>
+<hr />
+<h2 id="the-challenge-of-pulleys-in-ammojs">The Challenge of Pulleys in
+Ammo.js</h2>
+<p>Ammo.js does not feature a dedicated, out-of-the-box "pulley
+constraint." To simulate a pulley realistically, you must choose between
+two primary methods:</p>
+<ol type="1">
+<li><strong>The Rope Chain Method:</strong> Creating a chain of small,
+connected rigid bodies draped over a collision cylinder. While visually
+realistic, this method is computationally expensive and prone to
+instability (joint stretching).</li>
+<li><strong>The Coupled Constraint Method (Recommended):</strong> Using
+standard constraints (like sliders or point-to-point) to restrict the
+masses to linear paths, and applying a mathematical feedback loop in the
+physics tick to couple their movements.</li>
+</ol>
+<p>This guide focuses on the <strong>Coupled Constraint Method</strong>,
+as it offers maximum physical stability and performance.</p>
+<hr />
+<h2 id="step-1-set-up-the-rigid-bodies">Step 1: Set Up the Rigid
+Bodies</h2>
+<p>First, define the two masses (Weight A and Weight B) that will hang
+from the pulley. These must be dynamic rigid bodies.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper function to create a dynamic box</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createWeight</span>(mass<span class="op">,</span> x<span class="op">,</span> y<span class="op">,</span> z<span class="op">,</span> width<span class="op">,</span> height<span class="op">,</span> depth) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> transform <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">.</span><span class="fu">setIdentity</span>()<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">.</span><span class="fu">setOrigin</span>(<span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(x<span class="op">,</span> y<span class="op">,</span> z))<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> motionState <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btDefaultMotionState</span>(transform)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> colShape <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btBoxShape</span>(<span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(width <span class="op">*</span> <span class="fl">0.5</span><span class="op">,</span> height <span class="op">*</span> <span class="fl">0.5</span><span class="op">,</span> depth <span class="op">*</span> <span class="fl">0.5</span>))<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> localInertia <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    colShape<span class="op">.</span><span class="fu">calculateLocalInertia</span>(mass<span class="op">,</span> localInertia)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> rbInfo <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btRigidBodyConstructionInfo</span>(mass<span class="op">,</span> motionState<span class="op">,</span> colShape<span class="op">,</span> localInertia)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> body <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btRigidBody</span>(rbInfo)<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Prevent the body from rotating to keep the simulation simple</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    body<span class="op">.</span><span class="fu">setAngularFactor</span>(<span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span>))<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    physicsWorld<span class="op">.</span><span class="fu">addRigidBody</span>(body)<span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> body<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> weightA <span class="op">=</span> <span class="fu">createWeight</span>(<span class="fl">2.0</span><span class="op">,</span> <span class="op">-</span><span class="dv">2</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span> <span class="co">// 2kg mass</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> weightB <span class="op">=</span> <span class="fu">createWeight</span>(<span class="fl">1.0</span><span class="op">,</span>  <span class="dv">2</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span> <span class="co">// 1kg mass</span></span></code></pre></div>
+<hr />
+<h2 id="step-2-restrict-movement-using-slider-constraints">Step 2:
+Restrict Movement Using Slider Constraints</h2>
+<p>To ensure both weights only move vertically (simulating them hanging
+straight down from the pulley wheels), attach each weight to a vertical
+<code>btSliderConstraint</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">addVerticalSlider</span>(body<span class="op">,</span> anchorX) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> localA <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    localA<span class="op">.</span><span class="fu">setIdentity</span>()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    localA<span class="op">.</span><span class="fu">getBasis</span>()<span class="op">.</span><span class="fu">setEulerZYX</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">2</span>)<span class="op">;</span> <span class="co">// Rotate axis to point vertically (Y-axis)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    localA<span class="op">.</span><span class="fu">setOrigin</span>(<span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(anchorX<span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">0</span>))<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> localB <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    localB<span class="op">.</span><span class="fu">setIdentity</span>()<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use a fixed reference frame in the world</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> slider <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btSliderConstraint</span>(body<span class="op">,</span> localB<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Allow free movement along the Y axis</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    slider<span class="op">.</span><span class="fu">setLowerLinLimit</span>(<span class="op">-</span><span class="fl">10.0</span>)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    slider<span class="op">.</span><span class="fu">setUpperLinLimit</span>(<span class="fl">10.0</span>)<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    physicsWorld<span class="op">.</span><span class="fu">addConstraint</span>(slider<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">addVerticalSlider</span>(weightA<span class="op">,</span> <span class="op">-</span><span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">addVerticalSlider</span>(weightB<span class="op">,</span> <span class="dv">2</span>)<span class="op">;</span></span></code></pre></div>
+<hr />
+<h2 id="step-3-implement-the-pulley-coupling-logic">Step 3: Implement
+the Pulley Coupling Logic</h2>
+<p>A true pulley system enforces the rule: <strong>when Weight A moves
+down by <span class="math inline">\(X\)</span> units, Weight B must move
+up by <span class="math inline">\(X\)</span> units</strong>.</p>
+<p>To enforce this constraint in Ammo.js without causing jitter, use an
+internal tick callback. This callback calculates the velocities of both
+bodies and applies counter-forces to preserve the total "rope
+length."</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ROPE_LENGTH <span class="op">=</span> <span class="fl">10.0</span><span class="op">;</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> PULLEY_Y <span class="op">=</span> <span class="fl">10.0</span><span class="op">;</span> <span class="co">// Y-coordinate of the pulley axle</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">setInternalTickCallback</span>((world<span class="op">,</span> timeStep) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> transformA <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> transformB <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    weightA<span class="op">.</span><span class="fu">getMotionState</span>()<span class="op">.</span><span class="fu">getWorldTransform</span>(transformA)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    weightB<span class="op">.</span><span class="fu">getMotionState</span>()<span class="op">.</span><span class="fu">getWorldTransform</span>(transformB)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> posA <span class="op">=</span> transformA<span class="op">.</span><span class="fu">getOrigin</span>()<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> posB <span class="op">=</span> transformB<span class="op">.</span><span class="fu">getOrigin</span>()<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Calculate distances from the pulley axle</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> distA <span class="op">=</span> PULLEY_Y <span class="op">-</span> posA<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> distB <span class="op">=</span> PULLEY_Y <span class="op">-</span> posB<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> currentLength <span class="op">=</span> distA <span class="op">+</span> distB<span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Calculate length error</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> error <span class="op">=</span> ROPE_LENGTH <span class="op">-</span> currentLength<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get current vertical velocities</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> velA <span class="op">=</span> weightA<span class="op">.</span><span class="fu">getLinearVelocity</span>()<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> velB <span class="op">=</span> weightB<span class="op">.</span><span class="fu">getLinearVelocity</span>()<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// The sum of velocities along the rope direction should be zero: -velA - velB = 0</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> relativeVelocity <span class="op">=</span> <span class="op">-</span>velA <span class="op">-</span> velB<span class="op">;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Proportional-Derivative (PD) control parameters for constraint enforcement</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> kKp <span class="op">=</span> <span class="fl">15.0</span><span class="op">;</span> <span class="co">// Spring constant for position correction</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> kKd <span class="op">=</span> <span class="fl">1.5</span><span class="op">;</span>  <span class="co">// Damping constant to prevent oscillations</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Calculate corrective force</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> correctionForce <span class="op">=</span> (error <span class="op">*</span> kKp) <span class="op">+</span> (relativeVelocity <span class="op">*</span> kKd)<span class="op">;</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply equal and opposite vertical forces to simulate the rope tension</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> forceVecA <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> <span class="op">-</span>correctionForce<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> forceVecB <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> correctionForce<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    weightA<span class="op">.</span><span class="fu">applyCentralForce</span>(forceVecA)<span class="op">;</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    weightB<span class="op">.</span><span class="fu">applyCentralForce</span>(forceVecB)<span class="op">;</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<hr />
+<h2 id="step-4-fine-tuning-the-physics">Step 4: Fine-Tuning the
+Physics</h2>
+<p>To ensure the simulation remains stable under varying frame
+rates:</p>
+<ul>
+<li><strong>Mass Ratios:</strong> Avoid extreme differences in mass
+(e.g., 1kg vs 1000kg). Keep mass ratios under 1:10 for optimal
+stability.</li>
+<li><strong>Sub-stepping:</strong> Ensure your main loop calls
+<code>physicsWorld.stepSimulation(deltaTime, 10, 1/60)</code> with
+adequate sub-steps (the second argument) to keep the constraint callback
+precise.</li>
+<li><strong>Damping:</strong> If the weights bounce excessively,
+increase linear damping on the rigid bodies using
+<code>body.setDamping(0.1, 0.0);</code>.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

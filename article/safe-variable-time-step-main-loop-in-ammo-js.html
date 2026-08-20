@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Variable Time Step Main Loop in Ammo.js - ammo.js</title>
+    <meta name="description" content="Implementing physics in web applications using ammo.js (a WebAssembly port of the Bullet Physics engine) requires a robust simulation loop. While fixed time steps are ideal for physics stability, real-world browser frame rates fluctuate due to rendering">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/safe-variable-time-step-main-loop-in-ammo-js">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Safe Variable Time Step Main Loop in Ammo.js - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/safe-variable-time-step-main-loop-in-ammo-js" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Implementing physics in web applications using ammo.js (a WebAssembly port of the Bullet Physics engine) requires a robust simulation loop. While fixed time steps are ideal for physics stability, real-world browser frame rates fluctuate due to rendering" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="safe-variable-time-step-main-loop-in-ammojs">Safe Variable Time
+Step Main Loop in Ammo.js</h1>
+<p>Implementing physics in web applications using ammo.js (a WebAssembly
+port of the Bullet Physics engine) requires a robust simulation loop.
+While fixed time steps are ideal for physics stability, real-world
+browser frame rates fluctuate due to rendering loads and hardware
+differences. This article explains how to safely implement a variable
+time step in your ammo.js main loop by configuring the
+<code>stepSimulation</code> parameters correctly to prevent physics
+jitter, slow-downs, and object tunneling.</p>
+<h3 id="understanding-stepsimulation">Understanding stepSimulation</h3>
+<p>The core of safe time stepping in ammo.js lies in the
+<code>dynamicsWorld.stepSimulation</code> method. This method takes
+three parameters:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>dynamicsWorld<span class="op">.</span><span class="fu">stepSimulation</span>(timeStep<span class="op">,</span> maxSubSteps<span class="op">,</span> fixedTimeStep)<span class="op">;</span></span></code></pre></div>
+<ol type="1">
+<li><strong><code>timeStep</code></strong>: The actual elapsed time (in
+seconds) since the last frame. This is your variable delta time.</li>
+<li><strong><code>maxSubSteps</code></strong>: The maximum number of
+internal fixed steps ammo.js is allowed to take in a single frame to
+catch up with the elapsed real time.</li>
+<li><strong><code>fixedTimeStep</code></strong>: The duration of each
+internal simulation step. By default, this is <code>1 / 60</code> (about
+16.67 milliseconds).</li>
+</ol>
+<h3 id="the-mechanics-of-safe-stepping">The Mechanics of Safe
+Stepping</h3>
+<p>Ammo.js resolves the conflict between variable frame rates and
+physics stability by running a fixed-step simulation inside a
+variable-step game loop.</p>
+<p>When you pass the variable <code>timeStep</code> to
+<code>stepSimulation</code>, ammo.js accumulates this time. It then runs
+as many internal steps of size <code>fixedTimeStep</code> as necessary
+to match the accumulated time. If there is leftover time that does not
+fit into a full <code>fixedTimeStep</code>, ammo.js automatically
+interpolates the positions of the physics bodies for smooth
+rendering.</p>
+<h3 id="implementation-guide">Implementation Guide</h3>
+<p>To implement this safely, use the following pattern in your
+application loop:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> lastTime <span class="op">=</span> <span class="bu">performance</span><span class="op">.</span><span class="fu">now</span>()<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> fixedTimeStep <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> <span class="dv">60</span><span class="op">;</span> <span class="co">// 60Hz physics step</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxSubSteps <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>       <span class="co">// Prevents the &quot;spiral of death&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">tick</span>() {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">requestAnimationFrame</span>(tick)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> currentTime <span class="op">=</span> <span class="bu">performance</span><span class="op">.</span><span class="fu">now</span>()<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Calculate delta time in seconds</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> deltaTime <span class="op">=</span> (currentTime <span class="op">-</span> lastTime) <span class="op">/</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    lastTime <span class="op">=</span> currentTime<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Cap the maximum delta time</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// If the tab loses focus or lags severely, this prevents </span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// the physics engine from attempting to simulate hundreds of steps at once.</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (deltaTime <span class="op">&gt;</span> <span class="fl">0.25</span>) {</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        deltaTime <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Step the simulation</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ammo.js will run up to 10 substeps of 1/60s to cover the deltaTime.</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    dynamicsWorld<span class="op">.</span><span class="fu">stepSimulation</span>(deltaTime<span class="op">,</span> maxSubSteps<span class="op">,</span> fixedTimeStep)<span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Update your graphics/render engine</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">updateGraphicsTransforms</span>()<span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    renderer<span class="op">.</span><span class="fu">render</span>(scene<span class="op">,</span> camera)<span class="op">;</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">requestAnimationFrame</span>(tick)<span class="op">;</span></span></code></pre></div>
+<h3 id="critical-rules-for-stability">Critical Rules for Stability</h3>
+<p>To ensure the simulation remains stable and performant, adhere to the
+following rules:</p>
+<ul>
+<li><strong>Never set <code>maxSubSteps</code> to 0:</strong> Setting
+<code>maxSubSteps</code> to 0 forces ammo.js to use a completely
+variable time step size equal to <code>timeStep</code>. This disables
+internal fixed substeps, leading to unstable physics behavior, clipping
+through walls, and unpredictable constraint behavior.</li>
+<li><strong>Ensure
+<code>maxSubSteps * fixedTimeStep &gt;= deltaTime</code>:</strong> Under
+normal running conditions, the maximum time covered by your substeps
+must be greater than your frame delta time. For a 60Hz physics step
+(<code>0.0166s</code>) and a 60FPS target frame rate,
+<code>maxSubSteps</code> should be at least <code>2</code> to handle
+minor frame drops. Setting it to <code>10</code> provides a safe buffer
+for heavier lag spikes.</li>
+<li><strong>Clamp the input Delta Time:</strong> When a user switches
+browser tabs, <code>requestAnimationFrame</code> pauses. When they
+return, <code>deltaTime</code> can be several seconds long. Without
+clamping <code>deltaTime</code> (e.g., capping it at <code>0.25</code>
+seconds), ammo.js will attempt to calculate hundreds of frames of
+physics in a single render step, freezing the browser in a performance
+loop known as the "spiral of death."</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

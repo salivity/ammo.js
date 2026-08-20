@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Fix Jitter in Stacked Ammo.js Boxes - ammo.js</title>
+    <meta name="description" content="Stacked rigid bodies in Ammo.js (a JavaScript port of the Bullet physics engine) often exhibit a realistic but frustrating shaking or jittering effect. This article explains the underlying causes of this instability—such as constraint solver limitation">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/how-to-fix-jitter-in-stacked-ammo-js-boxes">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Fix Jitter in Stacked Ammo.js Boxes - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/how-to-fix-jitter-in-stacked-ammo-js-boxes" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Stacked rigid bodies in Ammo.js (a JavaScript port of the Bullet physics engine) often exhibit a realistic but frustrating shaking or jittering effect. This article explains the underlying causes of this instability—such as constraint solver limitation" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="how-to-fix-jitter-in-stacked-ammojs-boxes">How to Fix Jitter in
+Stacked Ammo.js Boxes</h1>
+<p>Stacked rigid bodies in Ammo.js (a JavaScript port of the Bullet
+physics engine) often exhibit a realistic but frustrating shaking or
+jittering effect. This article explains the underlying causes of this
+instability—such as constraint solver limitations, substepping
+mismatches, and collision margin issues—and provides actionable
+solutions to mitigate the jitter and achieve stable physics stacks.</p>
+<h2 id="what-causes-jitter-in-stacked-ammojs-boxes">What Causes Jitter
+in Stacked Ammo.js Boxes?</h2>
+<p>The jittering effect, often referred to as "physics creep" or
+"shaking," is primarily caused by the iterative nature of the constraint
+solver.</p>
+<ul>
+<li><strong>Solver Iteration Limits:</strong> To calculate collisions,
+Ammo.js uses an iterative constraint solver. If the solver does not run
+enough iterations, it cannot fully resolve the forces propagating
+through a tall stack, leaving residual energy that manifests as
+shaking.</li>
+<li><strong>Micro-Penetrations and Over-Correction:</strong> Physics
+engines allow boxes to slightly penetrate each other to detect
+collisions. The engine then applies a corrective force to push them
+apart. In a stack, this correction pushes the next box up, creating a
+feedback loop of over-corrections.</li>
+<li><strong>Inconsistent Timesteps:</strong> Passing variable frame
+times (delta time) directly into the physics step function causes
+instability.</li>
+<li><strong>Absence of Rigid Body Sleeping:</strong> If rigid bodies do
+not enter a "sleeping" (deactivated) state when their velocity is near
+zero, tiny numerical fluctuations will keep them perpetually in
+motion.</li>
+</ul>
+<hr />
+<h2 id="how-to-mitigate-stack-jitter">How to Mitigate Stack Jitter</h2>
+<p>To achieve stable stacked boxes, you must configure the simulation
+parameters, step sizes, and rigid body properties correctly.</p>
+<h3 id="1-configure-fixed-timesteps-and-substepping">1. Configure Fixed
+Timesteps and Substepping</h3>
+<p>Never pass raw delta time from your render loop directly into the
+physics solver without proper substepping. The
+<code>stepSimulation</code> function requires a fixed time step and a
+maximum number of substeps.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example step simulation call</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// stepSimulation(actualTimeElapsed, maxSubSteps, fixedTimeStep)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">stepSimulation</span>(deltaTime<span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">1</span> <span class="op">/</span> <span class="dv">120</span>)<span class="op">;</span></span></code></pre></div>
+<p>Using a <code>fixedTimeStep</code> of <code>1/120</code> (120Hz)
+instead of <code>1/60</code> (60Hz) dramatically increases stack
+stability by calculating physics more frequently, reducing the distance
+boxes can penetrate between frames.</p>
+<h3 id="2-increase-solver-iterations">2. Increase Solver Iterations</h3>
+<p>You can increase the accuracy of the constraint solver by increasing
+the number of iterations. More iterations mean the solver has more
+passes to resolve the stack's forces.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> solverInfo <span class="op">=</span> physicsWorld<span class="op">.</span><span class="fu">getSolverInfo</span>()<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>solverInfo<span class="op">.</span><span class="fu">set_m_numIterations</span>(<span class="dv">20</span>)<span class="op">;</span> <span class="co">// Default is usually 10</span></span></code></pre></div>
+<p><em>Note: Increasing iterations improves stability but consumes more
+CPU.</em></p>
+<h3 id="3-adjust-collision-margins">3. Adjust Collision Margins</h3>
+<p>Ammo.js uses a small margin around shapes to improve collision
+detection performance. For box shapes (<code>btBoxShape</code>), the
+margin can cause rounded behavior at corners or unexpected gaps if
+misconfigured.</p>
+<p>Set the margin explicitly on your box shapes, or rely on implicit
+margins if using modern versions of the engine:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> boxShape <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btBoxShape</span>(<span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(halfWidth<span class="op">,</span> halfHeight<span class="op">,</span> halfDepth))<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>boxShape<span class="op">.</span><span class="fu">setMargin</span>(<span class="fl">0.04</span>)<span class="op">;</span> <span class="co">// Adjust this value based on your object scale</span></span></code></pre></div>
+<h3 id="4-configure-rigid-body-sleeping-deactivation">4. Configure Rigid
+Body Sleeping (Deactivation)</h3>
+<p>Allowing objects to fall asleep is the most effective way to stop
+jitter in resting stacks. Once an object's linear and angular velocity
+falls below a threshold, the engine disables its physics calculations
+until another object collides with it.</p>
+<p>Ensure sleeping is enabled on your stacked boxes:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Prevent objects from staying active forever</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">setActivationState</span>(<span class="dv">1</span>)<span class="op">;</span> <span class="co">// 1 = ACTIVE_TAG, which allows sleeping transitions</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Set custom thresholds for when the body should fall asleep</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">setSleepingThresholds</span>(<span class="fl">0.8</span><span class="op">,</span> <span class="fl">1.0</span>)<span class="op">;</span> <span class="co">// (linearVelocityThreshold, angularVelocityThreshold)</span></span></code></pre></div>
+<h3 id="5-tune-erp-and-cfm">5. Tune ERP and CFM</h3>
+<p>The Error Reduction Parameter (ERP) and Constraint Force Mixing (CFM)
+control how aggressively the engine resolves penetrations.</p>
+<ul>
+<li><strong>ERP</strong> defines what fraction of joint/collision error
+is corrected in each step.</li>
+<li><strong>CFM</strong> defines how "soft" the constraints are.</li>
+</ul>
+<p>Reducing ERP or slightly increasing CFM can soften the corrective
+forces, preventing the explosive over-corrections that cause stacks to
+jitter and collapse. These can be adjusted globally via the solver
+info:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> solverInfo <span class="op">=</span> physicsWorld<span class="op">.</span><span class="fu">getSolverInfo</span>()<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>solverInfo<span class="op">.</span><span class="fu">set_m_erp</span>(<span class="fl">0.2</span>)<span class="op">;</span>  <span class="co">// Lower values make corrections gentler</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>solverInfo<span class="op">.</span><span class="fu">set_m_globalCfm</span>(<span class="fl">0.00001</span>)<span class="op">;</span> <span class="co">// Adds a tiny amount of elasticity/softness</span></span></code></pre></div></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

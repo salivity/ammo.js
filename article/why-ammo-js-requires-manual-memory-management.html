@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Ammo.js Requires Manual Memory Management - ammo.js</title>
+    <meta name="description" content="This article explains why developers must manually manage memory when using ammo.js, a popular 3D physics engine for the web. While JavaScript typically handles memory automatically through garbage collection, ammo.js operates under a different architect">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/why-ammo-js-requires-manual-memory-management">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Ammo.js Requires Manual Memory Management - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/why-ammo-js-requires-manual-memory-management" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains why developers must manually manage memory when using ammo.js, a popular 3D physics engine for the web. While JavaScript typically handles memory automatically through garbage collection, ammo.js operates under a different architect" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="why-ammojs-requires-manual-memory-management">Why Ammo.js
+Requires Manual Memory Management</h1>
+<p>This article explains why developers must manually manage memory when
+using ammo.js, a popular 3D physics engine for the web. While JavaScript
+typically handles memory automatically through garbage collection,
+ammo.js operates under a different architecture that bypasses these
+standard mechanisms, making explicit memory deallocation necessary to
+prevent severe performance degradation and browser crashes.</p>
+<h2 id="the-emscripten-and-webassembly-wrapper">The Emscripten and
+WebAssembly Wrapper</h2>
+<p>At its core, ammo.js is not written in native JavaScript. It is a
+direct port of the Bullet Physics SDK, which is written in C++. To run
+this C++ code in a web browser, developers use a toolchain called
+Emscripten to compile the source code into WebAssembly (Wasm) or
+asm.js.</p>
+<p>When the compiled C++ code runs in the browser, it operates within a
+sandboxed, pre-allocated memory space called the WebAssembly heap. This
+heap is separate from the standard JavaScript engine's memory heap.</p>
+<h2 id="the-limits-of-javascript-garbage-collection">The Limits of
+JavaScript Garbage Collection</h2>
+<p>JavaScript features automatic garbage collection, meaning the browser
+automatically detects when an object is no longer referenced and frees
+its memory. However, the JavaScript garbage collector can only see and
+manage native JavaScript objects.</p>
+<p>When you instantiate an ammo.js object—such as a physics body,
+collision shape, or vector—using code like
+<code>new Ammo.btVector3()</code>, two things happen:</p>
+<ol type="1">
+<li>A small wrapper object is created in the JavaScript memory
+heap.</li>
+<li>The actual physics data and memory structure are allocated within
+the WebAssembly/C++ heap.</li>
+</ol>
+<p>If you lose the reference to the JavaScript wrapper object (for
+example, by letting it go out of scope), the browser's garbage collector
+will eventually destroy the JS wrapper. However, the garbage collector
+has no visibility into the WebAssembly heap. Consequently, the actual
+C++ object remains allocated in the Wasm memory space forever, leading
+to a memory leak.</p>
+<h2 id="the-consequences-of-memory-leaks-in-physics-engines">The
+Consequences of Memory Leaks in Physics Engines</h2>
+<p>Physics simulations are highly repetitive, often updating 60 times
+per second. If you allocate temporary vectors, transform matrices, or
+collision objects inside an active render loop without freeing them, the
+WebAssembly heap will rapidly fill up.</p>
+<p>Once the WebAssembly memory allocation reaches its limit, the browser
+will throw an "out of memory" error, causing the entire physics
+simulation—and potentially the browser tab—to crash.</p>
+<h2 id="how-to-manage-memory-manually-in-ammojs">How to Manage Memory
+Manually in Ammo.js</h2>
+<p>To prevent these leaks, you must explicitly tell ammo.js to free the
+C++ side of the allocated memory when an object is no longer needed.
+This is achieved using the <code>Ammo.destroy()</code> function.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Allocation</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> forceVector <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> <span class="op">-</span><span class="fl">9.8</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Use the object in your physics simulation</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>rigidBody<span class="op">.</span><span class="fu">applyCentralForce</span>(forceVector)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Manual deallocation once finished</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>Ammo<span class="op">.</span><span class="fu">destroy</span>(forceVector)<span class="op">;</span></span></code></pre></div>
+<p>By calling <code>Ammo.destroy()</code>, you delete the object from
+the WebAssembly heap, keeping the memory footprint stable. For complex
+applications, developers often implement object pools for frequently
+created items (like vectors and matrices) to reuse them instead of
+constantly allocating and destroying memory.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

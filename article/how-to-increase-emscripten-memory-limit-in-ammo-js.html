@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Increase Emscripten Memory Limit in Ammo.js - ammo.js</title>
+    <meta name="description" content="When building complex 3D physics simulations using ammo.js, you may encounter out-of-memory errors due to Emscripten's default memory limits. This article provides a straightforward guide on how to increase the default memory allocation and enable dynami">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/how-to-increase-emscripten-memory-limit-in-ammo-js">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Increase Emscripten Memory Limit in Ammo.js - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/how-to-increase-emscripten-memory-limit-in-ammo-js" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When building complex 3D physics simulations using ammo.js, you may encounter out-of-memory errors due to Emscripten's default memory limits. This article provides a straightforward guide on how to increase the default memory allocation and enable dynami" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="how-to-increase-emscripten-memory-limit-in-ammojs">How to
+Increase Emscripten Memory Limit in Ammo.js</h1>
+<p>When building complex 3D physics simulations using ammo.js, you may
+encounter out-of-memory errors due to Emscripten's default memory
+limits. This article provides a straightforward guide on how to increase
+the default memory allocation and enable dynamic memory growth in your
+ammo.js application using Emscripten compilation flags.</p>
+<h3 id="understanding-the-limit">Understanding the Limit</h3>
+<p>By default, Emscripten allocates a static memory size (typically
+16MB) for the WebAssembly (Wasm) heap. If your ammo.js physics world
+contains thousands of rigid bodies, complex collision meshes, or dense
+heightmaps, the simulation will quickly exhaust this space, resulting in
+a "Cannot enlarge memory arrays" or "Out of memory" crash.</p>
+<p>To resolve this, you must adjust the memory settings when compiling
+ammo.js from its source code.</p>
+<h3 id="step-1-increase-the-initial-memory-limit">Step 1: Increase the
+Initial Memory Limit</h3>
+<p>To set a larger fixed memory size, you need to rebuild ammo.js using
+the <code>-s INITIAL_MEMORY</code> compiler flag.</p>
+<p>The value passed to this flag must be specified in bytes and
+<strong>must be a multiple of 65,536</strong> (64 KB), which is the
+WebAssembly page size.</p>
+<p>For example, to increase the initial memory to 128MB (134,217,728
+bytes), add the following flag to your Emscripten compilation
+command:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">-s</span> INITIAL_MEMORY=134217728</span></code></pre></div>
+<p>To set it to 256MB (268,435,456 bytes):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">-s</span> INITIAL_MEMORY=268435456</span></code></pre></div>
+<h3 id="step-2-enable-dynamic-memory-growth-recommended">Step 2: Enable
+Dynamic Memory Growth (Recommended)</h3>
+<p>If you do not know the exact memory requirements of your application
+beforehand, you can allow the memory heap to grow dynamically at
+runtime. This prevents crashes if your physics world expands
+unexpectedly.</p>
+<p>To enable this, use the <code>-s ALLOW_MEMORY_GROWTH=1</code> flag
+during compilation:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">-s</span> ALLOW_MEMORY_GROWTH=1</span></code></pre></div>
+<p><em>Note: While dynamic memory growth is highly convenient, it can
+introduce minor performance overhead when the memory expands, as the
+JavaScript engine must reallocate the WebAssembly memory
+buffer.</em></p>
+<h3 id="step-3-applying-the-flags-to-the-ammojs-build-command">Step 3:
+Applying the Flags to the Ammo.js Build Command</h3>
+<p>When building ammo.js using the Emscripten toolchain (usually via a
+terminal or a build script like <code>cmake</code> or
+<code>make</code>), append these flags to the <code>emcc</code>
+command.</p>
+<p>A typical compilation command incorporating both a 128MB initial
+limit and dynamic growth looks like this:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">emcc</span> ammo.idl <span class="at">-o</span> ammo.js <span class="at">-s</span> INITIAL_MEMORY=134217728 <span class="at">-s</span> ALLOW_MEMORY_GROWTH=1 <span class="at">-s</span> NO_EXIT_RUNTIME=1 <span class="at">-O3</span></span></code></pre></div>
+<p>By rebuilding ammo.js with these parameters, your application will
+have access to the necessary memory resources required to run complex,
+large-scale physics simulations smoothly.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

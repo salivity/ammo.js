@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Soft Body Solver Iterations and Cloth Intersection - ammo.js</title>
+    <meta name="description" content="This article explains how the soft body solver iterations setting in ammo.js prevents cloth self-intersection and clipping during web-based physics simulations. It details the relationship between solver passes, physics accuracy, and CPU performance, off">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-soft-body-solver-iterations-and-cloth-intersection">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Soft Body Solver Iterations and Cloth Intersection - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-soft-body-solver-iterations-and-cloth-intersection" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how the soft body solver iterations setting in ammo.js prevents cloth self-intersection and clipping during web-based physics simulations. It details the relationship between solver passes, physics accuracy, and CPU performance, off" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1
+id="ammojs-soft-body-solver-iterations-and-cloth-intersection">Ammo.js
+Soft Body Solver Iterations and Cloth Intersection</h1>
+<p>This article explains how the soft body solver iterations setting in
+ammo.js prevents cloth self-intersection and clipping during web-based
+physics simulations. It details the relationship between solver passes,
+physics accuracy, and CPU performance, offering practical insights on
+optimizing your WebGL physics engine.</p>
+<p>In ammo.js (a JavaScript port of the Bullet Physics engine), cloth is
+simulated as a soft body comprised of vertices, links, and faces
+governed by constraints. When cloth collides with itself or other 3D
+meshes, the physics engine must resolve these contacts to prevent the
+geometry from passing through itself. This resolution is controlled by
+the solver iterations setting, primarily configured via
+<code>btSoftBody::Config::piterations</code> (position solver
+iterations).</p>
+<h3 id="understanding-solver-iterations">Understanding Solver
+Iterations</h3>
+<p>The solver iterations parameter defines how many times the physics
+engine calculates and enforces constraints per simulation step. When
+cloth vertices collide with an obstacle or another part of the cloth,
+they generate contact constraints. The solver runs iteratively to
+satisfy these constraints by pushing intersecting vertices back to the
+correct side of the colliding surface.</p>
+<h3 id="preventing-tunneling-and-intersections">Preventing Tunneling and
+Intersections</h3>
+<p>If the solver iterations value is set too low, the physics engine
+will stop calculating before all constraints are resolved. This results
+in "tunneling," where vertices pass through collision boundaries,
+causing the cloth to clip through itself or solid objects.</p>
+<p>By increasing the solver iterations, you allow ammo.js to perform
+more refinement passes per frame. This ensures that:</p>
+<ul>
+<li><strong>Self-collisions are resolved:</strong> Vertices folded
+against other parts of the same mesh are pushed apart successfully.</li>
+<li><strong>Stretching constraints are maintained:</strong> The cloth
+retains its structural integrity rather than stretching infinitely or
+collapsing under gravity.</li>
+<li><strong>High-speed collisions remain stable:</strong> Fast-moving
+cloth does not bypass thin collision barriers.</li>
+</ul>
+<h3 id="balancing-performance-and-quality">Balancing Performance and
+Quality</h3>
+<p>While higher iterations drastically reduce cloth intersection, they
+come at a heavy computational cost. Because ammo.js runs in the browser
+CPU via WebAssembly or JavaScript, high iteration counts can quickly
+bottleneck the main thread, lowering the frame rate.</p>
+<p>To achieve optimal results, developers should:</p>
+<ol type="1">
+<li><strong>Increase Position Iterations
+(<code>piterations</code>):</strong> Values between 4 and 10 are
+typically sufficient for standard cloth, while complex self-colliding
+robes may require 10 to 20.</li>
+<li><strong>Adjust the Substepping/Time Step:</strong> Often, pairing a
+moderate iteration count (e.g., 5) with smaller physics substeps (e.g.,
+1/120s or 1/240s instead of 1/60s) provides better stability and fewer
+intersections than simply maxing out the solver iterations.</li>
+<li><strong>Enable Self-Collision Flags:</strong> Ensure that
+<code>fIterations</code> and self-collision flags (like
+<code>fcollisions</code> with <code>SBF_SELF_COLLISIONS</code>) are
+explicitly enabled in the soft body configuration to allow the solver to
+calculate vertex-to-face and vertex-to-vertex limits.</li>
+</ol></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

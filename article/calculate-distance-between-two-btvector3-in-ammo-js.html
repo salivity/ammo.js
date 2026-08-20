@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculate Distance Between Two btVector3 in Ammo.js - ammo.js</title>
+    <meta name="description" content="This article explains how to accurately calculate the 3D mathematical distance between two btVector3 points in ammo.js, the JavaScript port of the Bullet Physics engine. You will learn the two primary ways to achieve this: using the built-in native Ammo.">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/calculate-distance-between-two-btvector3-in-ammo-js">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Calculate Distance Between Two btVector3 in Ammo.js - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/calculate-distance-between-two-btvector3-in-ammo-js" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to accurately calculate the 3D mathematical distance between two btVector3 points in ammo.js, the JavaScript port of the Bullet Physics engine. You will learn the two primary ways to achieve this: using the built-in native Ammo." />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="calculate-distance-between-two-btvector3-in-ammojs">Calculate
+Distance Between Two btVector3 in Ammo.js</h1>
+<p>This article explains how to accurately calculate the 3D mathematical
+distance between two <code>btVector3</code> points in ammo.js, the
+JavaScript port of the Bullet Physics engine. You will learn the two
+primary ways to achieve this: using the built-in native Ammo.js methods
+for simplicity, and using manual coordinate extraction for optimal
+performance and memory management.</p>
+<h3 id="method-1-using-the-native-ammojs-api">Method 1: Using the Native
+Ammo.js API</h3>
+<p>The simplest and most direct way to find the distance between two
+<code>btVector3</code> points is by using the native methods wrapped
+from the C++ Bullet Physics library. The <code>btVector3</code> class
+exposes both <code>distance()</code> and <code>distance2()</code>
+(squared distance) methods.</p>
+<p>To get the actual Euclidean distance:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Assuming point1 and point2 are instantiated Ammo.btVector3 objects</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> distance <span class="op">=</span> point1<span class="op">.</span><span class="fu">distance</span>(point2)<span class="op">;</span></span></code></pre></div>
+<p>If you only need to compare distances (for example, sorting objects
+by proximity or checking if an object is within a certain radius), it is
+highly recommended to use the squared distance. This avoids the
+computationally expensive square root operation:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> distanceSq <span class="op">=</span> point1<span class="op">.</span><span class="fu">distance2</span>(point2)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if distance is less than 5 units</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (distanceSq <span class="op">&lt;</span> <span class="dv">25</span>) { <span class="co">// 25 is 5 squared</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Points are close</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="method-2-manual-calculation-best-for-performance">Method 2:
+Manual Calculation (Best for Performance)</h3>
+<p>Ammo.js runs inside WebAssembly (or asm.js). Frequently calling
+native WebAssembly methods or creating temporary vectors can introduce
+performance overhead. For high-frequency calculations (such as inside a
+physics tick or render loop), extracting the coordinates and calculating
+the distance using standard JavaScript math is often faster.</p>
+<p>You can retrieve the <code>x</code>, <code>y</code>, and
+<code>z</code> coordinates using the getter functions and apply the 3D
+distance formula:</p>
+<p><span class="math display">\[\text{Distance} = \sqrt{(x_2 - x_1)^2 +
+(y_2 - y_1)^2 + (z_2 - z_1)^2}\]</span></p>
+<p>Here is how to implement this in JavaScript:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getDistance</span>(p1<span class="op">,</span> p2) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dx <span class="op">=</span> p1<span class="op">.</span><span class="fu">x</span>() <span class="op">-</span> p2<span class="op">.</span><span class="fu">x</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dy <span class="op">=</span> p1<span class="op">.</span><span class="fu">y</span>() <span class="op">-</span> p2<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dz <span class="op">=</span> p1<span class="op">.</span><span class="fu">z</span>() <span class="op">-</span> p2<span class="op">.</span><span class="fu">z</span>()<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">sqrt</span>(dx <span class="op">*</span> dx <span class="op">+</span> dy <span class="op">*</span> dy <span class="op">+</span> dz <span class="op">*</span> dz)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> distance <span class="op">=</span> <span class="fu">getDistance</span>(point1<span class="op">,</span> point2)<span class="op">;</span></span></code></pre></div>
+<p>Similarly, the performance-optimized squared distance helper:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getDistanceSq</span>(p1<span class="op">,</span> p2) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dx <span class="op">=</span> p1<span class="op">.</span><span class="fu">x</span>() <span class="op">-</span> p2<span class="op">.</span><span class="fu">x</span>()<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dy <span class="op">=</span> p1<span class="op">.</span><span class="fu">y</span>() <span class="op">-</span> p2<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dz <span class="op">=</span> p1<span class="op">.</span><span class="fu">z</span>() <span class="op">-</span> p2<span class="op">.</span><span class="fu">z</span>()<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dx <span class="op">*</span> dx <span class="op">+</span> dy <span class="op">*</span> dy <span class="op">+</span> dz <span class="op">*</span> dz<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="summary-of-choice">Summary of Choice</h3>
+<p>Use <strong>Method 1 (<code>point1.distance(point2)</code>)</strong>
+when writing clean, readable code for occasional distance checks. Use
+<strong>Method 2 (Manual math)</strong> inside loops, physics update
+steps, or when managing thousands of active entities to avoid garbage
+collection spikes and WebAssembly call overhead.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

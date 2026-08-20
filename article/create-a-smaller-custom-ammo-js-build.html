@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Smaller Custom Ammo.js Build - ammo.js</title>
+    <meta name="description" content="This article explains how to significantly reduce the file size of ammo.js—the Emscripten port of the Bullet physics engine—by stripping out unused features. You will learn how to customize the WebIDL interface file, configure Emscripten compiler fla">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/create-a-smaller-custom-ammo-js-build">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Create a Smaller Custom Ammo.js Build - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/create-a-smaller-custom-ammo-js-build" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to significantly reduce the file size of ammo.js—the Emscripten port of the Bullet physics engine—by stripping out unused features. You will learn how to customize the WebIDL interface file, configure Emscripten compiler fla" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="create-a-smaller-custom-ammojs-build">Create a Smaller Custom
+Ammo.js Build</h1>
+<p>This article explains how to significantly reduce the file size of
+<code>ammo.js</code>—the Emscripten port of the Bullet physics engine—by
+stripping out unused features. You will learn how to customize the
+WebIDL interface file, configure Emscripten compiler flags for optimal
+compression, and rebuild the library to generate a lightweight,
+production-ready WebAssembly physics engine.</p>
+<h2 id="understanding-the-ammojs-build-pipeline">Understanding the
+Ammo.js Build Pipeline</h2>
+<p>Ammo.js is not written in JavaScript from scratch; it is a direct C++
+port of the Bullet Physics SDK compiled using Emscripten. The
+compilation process relies on a WebIDL (Interface Definition Language)
+file named <code>ammo.idl</code>.</p>
+<p>This IDL file acts as a bridge, defining which C++ classes, methods,
+and properties are exposed to JavaScript. By default, Ammo.js includes
+almost the entire Bullet feature set, resulting in a large file size
+(often over 1.5MB). To create a smaller build, you must remove unused
+bindings from the IDL file and recompile the project.</p>
+<h2 id="step-1-set-up-the-build-environment">Step 1: Set Up the Build
+Environment</h2>
+<p>To build Ammo.js, you need Emscripten installed on your system, or
+you can use a pre-configured Docker container.</p>
+<ol type="1">
+<li>Clone the official Ammo.js repository:
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/kripken/ammo.js.git</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ammo.js</span></code></pre></div></li>
+<li>Ensure you have Python and the Emscripten SDK (emsdk) installed and
+activated in your terminal helper environment.</li>
+</ol>
+<h2 id="step-2-strip-unused-features-from-the-idl-file">Step 2: Strip
+Unused Features from the IDL File</h2>
+<p>The key to reducing size is editing the <code>ammo.idl</code> file
+located in the root directory. Open this file in a text editor.</p>
+<p>Identify features your application does not require and delete or
+comment them out. Common candidates for removal include:</p>
+<ul>
+<li><strong>Soft Body Physics:</strong> If your project only uses rigid
+bodies, remove <code>btSoftBody</code>,
+<code>btSoftRigidDynamicsWorld</code>, and associated helpers.</li>
+<li><strong>Vehicle Physics:</strong> If you are not building a driving
+simulator, strip out <code>btRaycastVehicle</code> and
+<code>btVehicleTuning</code>.</li>
+<li><strong>Complex Constraints:</strong> Remove unused joints and
+constraints like <code>btGearConstraint</code>,
+<code>btConeTwistConstraint</code>, or
+<code>btSliderConstraint</code>.</li>
+<li><strong>Collision Shapes:</strong> If you only use boxes and
+spheres, remove complex shapes like
+<code>btHeightfieldTerrainShape</code>,
+<code>btMinkowskiSumShape</code>, or
+<code>btConvexHullShape</code>.</li>
+</ul>
+<p>For example, to remove soft body support, delete the corresponding
+interfaces:</p>
+<pre class="idl"><code>// Remove or comment out interfaces like this if unused:
+interface btSoftBodyWorldInfo {
+  void btSoftBodyWorldInfo();
+  attribute float air_density;
+  attribute float water_density;
+  ...
+};</code></pre>
+<h2 id="step-3-optimize-emscripten-compilation-flags">Step 3: Optimize
+Emscripten Compilation Flags</h2>
+<p>Next, modify the build configuration to ensure the compiler
+aggressively optimizes the remaining code. Open <code>make.py</code> in
+the root directory. This script coordinates the build process.</p>
+<p>Locate the Emscripten compiler flags array and ensure the following
+flags are set:</p>
+<ul>
+<li><strong><code>-O3</code> or <code>-Oz</code>:</strong> Use
+<code>-Oz</code> instead of <code>-O3</code>. While <code>-O3</code>
+optimizes for performance, <code>-Oz</code> optimizes aggressively for
+code size, which is critical for web delivery.</li>
+<li><strong><code>--closure 1</code>:</strong> This enables the Google
+Closure Compiler to minify the resulting JavaScript wrapper file and
+remove dead code.</li>
+<li><strong><code>-s WASM=1</code>:</strong> Ensure you are targeting
+WebAssembly, which inherently produces smaller binary sizes than pure
+asm.js.</li>
+<li><strong><code>-g0</code>:</strong> Disable debug symbols to prevent
+unnecessary bloat in the compiled binary.</li>
+<li><strong><code>-s FILESYSTEM=0</code>:</strong> If your physics
+simulation does not require local file reading/writing, disabling the
+virtual filesystem saves additional space.</li>
+</ul>
+<p>Example modification in <code>make.py</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Look for the emcc argument list and update/add:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>emcc_args <span class="op">=</span> [</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-Oz&#39;</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;--closure&#39;</span>, <span class="st">&#39;1&#39;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-s&#39;</span>, <span class="st">&#39;WASM=1&#39;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-s&#39;</span>, <span class="st">&#39;FILESYSTEM=0&#39;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-s&#39;</span>, <span class="st">&#39;AGGRESSIVE_VARIABLE_ELIMINATION=1&#39;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-s&#39;</span>, <span class="st">&#39;ELIMINATE_DUPLICATE_FUNCTIONS=1&#39;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<h2 id="step-4-run-the-build-script">Step 4: Run the Build Script</h2>
+<p>Once the <code>ammo.idl</code> file is trimmed and
+<code>make.py</code> is configured, execute the build script to generate
+your custom build:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> make.py</span></code></pre></div>
+<p>This script will parse the modified IDL file, generate the glue code,
+compile the selected C++ Bullet source files, and output the optimized
+files into the <code>builds/</code> directory.</p>
+<h2 id="step-5-verify-and-test-the-output">Step 5: Verify and Test the
+Output</h2>
+<p>Compare the file size of your new <code>ammo.wasm</code> and
+<code>ammo.js</code> files against the default builds. In many cases,
+stripping soft bodies, vehicles, and unused collision shapes can reduce
+the final Wasm file size by 50% or more.</p>
+<p>Finally, integrate the new build into your application. If your
+application throws a
+<code>TypeError: Ammo.XXX is not a constructor</code> error, it means
+you stripped a class or method in the IDL file that your application
+still relies on. If this occurs, restore that specific interface in
+<code>ammo.idl</code> and rebuild.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

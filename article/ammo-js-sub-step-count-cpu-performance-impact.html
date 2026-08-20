@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Sub-step Count CPU Performance Impact - ammo.js</title>
+    <meta name="description" content="This article examines how drastically increasing the sub-step count in the ammo.js physics engine affects CPU performance. It explains the relationship between sub-stepping and CPU load, details why simulation complexity multiplies with higher step count">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-sub-step-count-cpu-performance-impact">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Sub-step Count CPU Performance Impact - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-sub-step-count-cpu-performance-impact" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article examines how drastically increasing the sub-step count in the ammo.js physics engine affects CPU performance. It explains the relationship between sub-stepping and CPU load, details why simulation complexity multiplies with higher step count" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-sub-step-count-cpu-performance-impact">Ammo.js Sub-step
+Count CPU Performance Impact</h1>
+<p>This article examines how drastically increasing the sub-step count
+in the ammo.js physics engine affects CPU performance. It explains the
+relationship between sub-stepping and CPU load, details why simulation
+complexity multiplies with higher step counts, and offers practical
+alternatives for maintaining physics stability without degrading
+application performance.</p>
+<h2 id="understanding-sub-stepping-in-ammojs">Understanding Sub-stepping
+in Ammo.js</h2>
+<p>Ammo.js, a direct JavaScript port of the Bullet Physics engine,
+updates its simulation using the <code>stepSimulation</code> method.
+This method takes three primary parameters: the elapsed time, the
+maximum number of sub-steps, and the fixed time step size.</p>
+<p>When the elapsed time of a frame exceeds the fixed time step
+(typically 1/60th of a second), ammo.js divides the frame into multiple
+"sub-steps" to maintain mathematical stability. Drastically increasing
+the maximum sub-step count allows the engine to run more
+mini-simulations per frame, preventing fast-moving objects from passing
+through barriers (tunneling) and keeping complex constraint systems
+stable.</p>
+<h2 id="the-direct-impact-on-cpu-load">The Direct Impact on CPU
+Load</h2>
+<p>Increasing the sub-step count has a direct, often
+linear-to-exponential, negative impact on CPU performance. Each
+additional sub-step forces the CPU to execute the entire physics
+pipeline repeatedly within a single frame. This pipeline consists of
+several computationally heavy stages:</p>
+<ul>
+<li><strong>Broadphase Collision Detection:</strong> The engine must
+recalculate the bounding boxes of all active rigid bodies to determine
+which pairs are potentially colliding.</li>
+<li><strong>Narrowphase Collision Detection:</strong> For every
+potential pair identified in the broadphase, the CPU performs precise
+mathematical algorithms (like GJK and EPA) to calculate exact collision
+points, penetration depths, and contact manifolds.</li>
+<li><strong>Constraint Solving:</strong> Ammo.js uses a sequential
+impulse solver to resolve collisions, hinges, sliders, and joints. The
+solver runs a set number of iterations <em>per sub-step</em>. If your
+solver is configured for 10 iterations and the engine runs 10 sub-steps,
+the CPU must compute constraint equations 100 times for every single
+constrained object in that frame.</li>
+<li><strong>Integration:</strong> The engine updates the linear/angular
+velocities and positional coordinates of every active rigid body.</li>
+</ul>
+<p>When the sub-step count is drastically increased, the CPU time spent
+on these four stages multiplies. If the CPU cannot complete these
+calculations within the budget of a single frame (e.g., 16.6ms for 60
+FPS), it causes a performance drop, resulting in stuttering, frame rate
+drops, and unresponsive user interfaces.</p>
+<h2 id="the-spiral-of-death">The "Spiral of Death"</h2>
+<p>A critical risk of high sub-step configurations in WebGL and browser
+environments is the "spiral of death."</p>
+<p>If a complex physics frame takes too long to compute, the next
+frame's elapsed time (<code>timeStep</code>) will be larger. To
+compensate for this larger elapsed time, ammo.js attempts to run even
+more sub-steps in the subsequent frame. This further increases the CPU
+load, causing the next frame to take even longer. This feedback loop
+quickly drags the frame rate down to single digits and can freeze the
+browser tab entirely.</p>
+<h2 id="alternatives-to-high-sub-step-counts">Alternatives to High
+Sub-step Counts</h2>
+<p>Instead of drastically increasing sub-steps to solve physics
+instabilities, developers can use more CPU-efficient techniques:</p>
+<ol type="1">
+<li><strong>Continuous Collision Detection (CCD):</strong> For
+fast-moving objects, enable CCD on the specific rigid bodies. This
+projects a swept sphere to detect collisions before they happen,
+avoiding the need to increase sub-steps for the entire scene.</li>
+<li><strong>Optimized Fixed Time Step:</strong> Instead of increasing
+the sub-step count, reduce the <code>fixedTimeStep</code> size (e.g.,
+from <code>1/60</code> to <code>1/120</code>) only when high precision
+is required, while keeping the maximum sub-step limit strictly
+capped.</li>
+<li><strong>Rigid Body Deactivation:</strong> Ensure that objects that
+are not moving are properly put to "sleep" (deactivated). Ammo.js will
+skip collision detection and integration for deactivated bodies, freeing
+up CPU cycles for the active sub-steps.</li>
+</ol></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

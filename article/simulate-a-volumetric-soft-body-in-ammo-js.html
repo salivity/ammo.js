@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulate a Volumetric Soft Body in Ammo.js - ammo.js</title>
+    <meta name="description" content="This article provides a step-by-step guide on how to simulate a volumetric soft body, such as a bouncing jelly sphere, using the Ammo.js physics engine. You will learn how to configure a soft body physics world, generate an ellipsoid soft body, tweak phy">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/simulate-a-volumetric-soft-body-in-ammo-js">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Simulate a Volumetric Soft Body in Ammo.js - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/simulate-a-volumetric-soft-body-in-ammo-js" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a step-by-step guide on how to simulate a volumetric soft body, such as a bouncing jelly sphere, using the Ammo.js physics engine. You will learn how to configure a soft body physics world, generate an ellipsoid soft body, tweak phy" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="simulate-a-volumetric-soft-body-in-ammojs">Simulate a Volumetric
+Soft Body in Ammo.js</h1>
+<p>This article provides a step-by-step guide on how to simulate a
+volumetric soft body, such as a bouncing jelly sphere, using the Ammo.js
+physics engine. You will learn how to configure a soft body physics
+world, generate an ellipsoid soft body, tweak physical properties like
+pressure and stiffness to achieve a realistic jelly-like behavior, and
+map the physics simulation to a Three.js visual mesh.</p>
+<h2 id="1-set-up-the-soft-body-physics-world">1. Set Up the Soft Body
+Physics World</h2>
+<p>Unlike a standard rigid body simulation, a soft body simulation
+requires a specialized dynamics world. You must initialize
+<code>btSoftRigidDynamicsWorld</code> and provide a soft body
+solver.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Bullet/Ammo physics</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> collisionConfiguration <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btSoftBodyRigidBodyCollisionConfiguration</span>()<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> dispatcher <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btCollisionDispatcher</span>(collisionConfiguration)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> broadphase <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btDbvtBroadphase</span>()<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> solver <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btSequentialImpulseConstraintSolver</span>()<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> softBodySolver <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btDefaultSoftBodySolver</span>()<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Create the soft/rigid dynamics world</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> physicsWorld <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btSoftRigidDynamicsWorld</span>(</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    dispatcher<span class="op">,</span> </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    broadphase<span class="op">,</span> </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    solver<span class="op">,</span> </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    collisionConfiguration<span class="op">,</span> </span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    softBodySolver</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Set gravity</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">setGravity</span>(<span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> <span class="op">-</span><span class="fl">9.8</span><span class="op">,</span> <span class="dv">0</span>))<span class="op">;</span></span></code></pre></div>
+<h2 id="2-create-the-soft-body-sphere">2. Create the Soft Body
+Sphere</h2>
+<p>To create a sphere, you can use Ammo's
+<code>btSoftBodyHelpers</code>. The <code>CreateEllipsoid</code> helper
+generates a soft body mesh shaped like a sphere based on a center point,
+radius vectors, and a vertex count resolution.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> softBodyHelpers <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btSoftBodyHelpers</span>()<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> center <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span> <span class="co">// Spawning height</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> radius <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span> <span class="co">// 1-meter radius sphere</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numVertices <span class="op">=</span> <span class="dv">128</span><span class="op">;</span>                    <span class="co">// Resolution of the geometry</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> softBody <span class="op">=</span> softBodyHelpers<span class="op">.</span><span class="fu">CreateEllipsoid</span>(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    physicsWorld<span class="op">.</span><span class="fu">getWorldInfo</span>()<span class="op">,</span> </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    center<span class="op">,</span> </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    radius<span class="op">,</span> </span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    numVertices</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Add the soft body to the physics world</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">addSoftBody</span>(softBody<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="op">-</span><span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="3-configure-jelly-like-physical-properties">3. Configure
+Jelly-Like Physical Properties</h2>
+<p>To make the soft body behave like a volumetric bouncy sphere (jelly)
+rather than a flat piece of cloth, you must adjust its configuration
+parameters. Specifically, you need to enable pressure, adjust stiffness,
+and configure collisions.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config <span class="op">=</span> softBody<span class="op">.</span><span class="fu">get_m_cfg</span>()<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Set solver iterations for structural stability</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_viterations</span>(<span class="dv">40</span>)<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_piterations</span>(<span class="dv">40</span>)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Collisions: Enable soft body vs. rigid body and soft body vs. soft body collisions</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_collisions</span>(<span class="bn">0x11</span>)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Material stiffness (0 = loose, 1 = rigid)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> material <span class="op">=</span> softBody<span class="op">.</span><span class="fu">getMaterial</span>(<span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>material<span class="op">.</span><span class="fu">set_m_kLST</span>(<span class="fl">0.1</span>)<span class="op">;</span> <span class="co">// Linear stiffness</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>material<span class="op">.</span><span class="fu">set_m_kAST</span>(<span class="fl">0.1</span>)<span class="op">;</span> <span class="co">// Angular stiffness</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Damping and Pressure (The key to volumetric volume retention)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_kDP</span>(<span class="fl">0.01</span>)<span class="op">;</span>  <span class="co">// Damping coefficient</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_kDF</span>(<span class="fl">0.2</span>)<span class="op">;</span>   <span class="co">// Dynamic friction</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_kPR</span>(<span class="fl">15.0</span>)<span class="op">;</span>  <span class="co">// Pressure coefficient (internal pressure that pushes outward)</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Set total mass</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>softBody<span class="op">.</span><span class="fu">setTotalMass</span>(<span class="fl">1.0</span><span class="op">,</span> <span class="kw">false</span>)<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Disable deactivation so the physics stays active when resting</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>softBody<span class="op">.</span><span class="fu">setActivationState</span>(<span class="dv">4</span>)<span class="op">;</span> </span></code></pre></div>
+<ul>
+<li><strong>Pressure (<code>kPR</code>):</strong> This is the most
+crucial setting. A high pressure value keeps the sphere filled with
+"air," preventing it from collapsing flat onto the floor when gravity
+acts on it.</li>
+<li><strong>Stiffness (<code>kLST</code> &amp;
+<code>kAST</code>):</strong> Low stiffness values allow the body to
+deform dramatically upon impact, creating the jelly jiggle effect.</li>
+</ul>
+<h2 id="4-bind-the-physics-to-a-visual-mesh">4. Bind the Physics to a
+Visual Mesh</h2>
+<p>To render the soft body using a graphics library like Three.js, you
+must map the positions of the soft body's nodes (vertices) to the visual
+geometry on every frame.</p>
+<h3 id="setup-the-threejs-geometry">Setup the Three.js Geometry</h3>
+<p>Use a matching Three.js <code>BufferGeometry</code> to render the
+soft body. Note that the vertex count of your Three.js mesh should
+ideally match or align with the physics soft body nodes.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> geometry <span class="op">=</span> <span class="kw">new</span> THREE<span class="op">.</span><span class="fu">BufferGeometry</span>()<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// ... Populate your geometry&#39;s positions and indices to match the physics ellipsoid ...</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> material <span class="op">=</span> <span class="kw">new</span> THREE<span class="op">.</span><span class="fu">MeshPhongMaterial</span>({ <span class="dt">color</span><span class="op">:</span> <span class="bn">0xff00ff</span> })<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> visualMesh <span class="op">=</span> <span class="kw">new</span> THREE<span class="op">.</span><span class="fu">Mesh</span>(geometry<span class="op">,</span> material)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>scene<span class="op">.</span><span class="fu">add</span>(visualMesh)<span class="op">;</span></span></code></pre></div>
+<h3 id="update-loop">Update Loop</h3>
+<p>During your render loop, step the physics world and copy the updated
+node positions from Ammo.js to your Three.js buffer attributes.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">updatePhysics</span>(deltaTime) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Step the physics world</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    physicsWorld<span class="op">.</span><span class="fu">stepSimulation</span>(deltaTime<span class="op">,</span> <span class="dv">10</span>)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get soft body nodes</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> nodes <span class="op">=</span> softBody<span class="op">.</span><span class="fu">get_m_nodes</span>()<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> numNodes <span class="op">=</span> nodes<span class="op">.</span><span class="fu">size</span>()<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get visual mesh vertex attributes</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> positions <span class="op">=</span> visualMesh<span class="op">.</span><span class="at">geometry</span><span class="op">.</span><span class="at">attributes</span><span class="op">.</span><span class="at">position</span><span class="op">.</span><span class="at">array</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> numNodes<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> node <span class="op">=</span> nodes<span class="op">.</span><span class="fu">at</span>(i)<span class="op">;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> pos <span class="op">=</span> node<span class="op">.</span><span class="fu">get_m_x</span>()<span class="op">;</span> <span class="co">// Node position vector</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        positions[index<span class="op">++</span>] <span class="op">=</span> pos<span class="op">.</span><span class="fu">x</span>()<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        positions[index<span class="op">++</span>] <span class="op">=</span> pos<span class="op">.</span><span class="fu">y</span>()<span class="op">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        positions[index<span class="op">++</span>] <span class="op">=</span> pos<span class="op">.</span><span class="fu">z</span>()<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Tell Three.js to update the vertices and recompute normals for lighting</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    visualMesh<span class="op">.</span><span class="at">geometry</span><span class="op">.</span><span class="at">attributes</span><span class="op">.</span><span class="at">position</span><span class="op">.</span><span class="at">needsUpdate</span> <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    visualMesh<span class="op">.</span><span class="at">geometry</span><span class="op">.</span><span class="fu">computeVertexNormals</span>()<span class="op">;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

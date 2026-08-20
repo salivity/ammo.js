@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Ammo.js Handles Soft Body Self-Collision - ammo.js</title>
+    <meta name="description" content="This article explores how the ammo.js physics engine—the JavaScript port of the Bullet physics library—manages self-collision within complex soft bodies. We will examine the underlying algorithms, key configuration settings such as cluster-based coll">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/how-ammo-js-handles-soft-body-self-collision">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Ammo.js Handles Soft Body Self-Collision - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/how-ammo-js-handles-soft-body-self-collision" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how the ammo.js physics engine—the JavaScript port of the Bullet physics library—manages self-collision within complex soft bodies. We will examine the underlying algorithms, key configuration settings such as cluster-based coll" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="how-ammojs-handles-soft-body-self-collision">How Ammo.js Handles
+Soft Body Self-Collision</h1>
+<p>This article explores how the <code>ammo.js</code> physics engine—the
+JavaScript port of the Bullet physics library—manages self-collision
+within complex soft bodies. We will examine the underlying algorithms,
+key configuration settings such as cluster-based collisions, and how
+developers can enable and optimize this feature to prevent soft body
+self-penetration.</p>
+<h2 id="the-challenge-of-soft-body-self-collision">The Challenge of Soft
+Body Self-Collision</h2>
+<p>In physics simulation, a soft body (such as cloth, rope, or a
+deformable volume) is represented as a network of vertices (nodes)
+connected by structural springs (links). By default,
+<code>ammo.js</code> calculates collisions between the soft body and
+external rigid bodies, but it does not check if the soft body is
+colliding with itself. Without self-collision enabled, a folding piece
+of cloth or a bending gel-like structure will pass through its own
+geometry, destroying the realism of the simulation.</p>
+<p>Resolving self-collision is computationally expensive because the
+engine must constantly monitor whether any part of the soft body's
+deformable mesh is intersecting with another part of the same mesh.</p>
+<h2 id="the-core-mechanism-clusters-vs-vertex-face-detection">The Core
+Mechanism: Clusters vs. Vertex-Face Detection</h2>
+<p>Ammo.js handles soft body self-collision primarily through two
+methods: <strong>Vertex-Face (VF) collisions</strong> and
+<strong>Cluster-Based collisions</strong>.</p>
+<h3 id="1-vertex-face-vf-self-collision">1. Vertex-Face (VF)
+Self-Collision</h3>
+<p>In this approach, the engine checks every vertex (node) against every
+triangular face of the soft body's mesh. While highly accurate, this
+method is computationally demanding. For complex meshes with thousands
+of vertices, Vertex-Face self-collision can cause severe performance
+drops, making it impractical for real-time web applications.</p>
+<h3 id="2-cluster-based-self-collision-recommended">2. Cluster-Based
+Self-Collision (Recommended)</h3>
+<p>To solve the performance bottleneck of VF collision, Bullet and
+<code>ammo.js</code> utilize a technique called <strong>deformable
+clusters</strong>.</p>
+<ul>
+<li><strong>Decomposition:</strong> The engine automatically groups
+adjacent vertices of the soft body into localized, overlapping groups
+called "clusters."</li>
+<li><strong>Collision Detection:</strong> Instead of checking individual
+vertices, the engine treats these clusters as convex shapes. It performs
+collision detection between these clusters using GJK
+(Gilbert-Johnson-Keerthi) and EPA (Expanding Polytope Algorithm)
+distance algorithms.</li>
+<li><strong>Self-Collision Resolution:</strong> When two clusters within
+the same soft body collide, the engine resolves the penetration by
+applying impulses to the vertices within those clusters, preventing the
+mesh from collapsing into itself.</li>
+</ul>
+<h2 id="how-to-configure-self-collision-in-ammojs">How to Configure
+Self-Collision in Ammo.js</h2>
+<p>To enable self-collision in <code>ammo.js</code>, developers must
+configure the soft body’s configuration object
+(<code>btSoftBodyConfig</code>) and generate clusters.</p>
+<h3 id="step-1-set-the-collision-flags">Step 1: Set the Collision
+Flags</h3>
+<p>You must modify the soft body's collision flags to instruct the
+solver to look for soft-body-to-soft-body and self-collisions. This is
+done using the <code>m_cfg.collisions</code> bitmask.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example flag configuration</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config <span class="op">=</span> softBody<span class="op">.</span><span class="fu">get_m_cfg</span>()<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Clear existing flags and set cluster-to-cluster soft body collision</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_collisions</span>(<span class="bn">0x0001</span> <span class="op">|</span> <span class="bn">0x0020</span>)<span class="op">;</span> </span></code></pre></div>
+<p>In the underlying Bullet API, the key flags for self-collision
+are:</p>
+<ul>
+<li><code>fCollision::CL_SS</code>: Enables cluster-versus-cluster
+collisions between soft bodies.</li>
+<li><code>fCollision::CL_SELF</code>: Enables cluster-versus-cluster
+self-collisions within the same soft body.</li>
+</ul>
+<h3 id="step-2-generate-clusters">Step 2: Generate Clusters</h3>
+<p>If you choose cluster-based collision, you must generate the clusters
+after creating the soft body mesh. This partition is built using the
+<code>generateClusters</code> method.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate 1024 clusters (or any number based on mesh complexity)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>softBody<span class="op">.</span><span class="fu">generateClusters</span>(<span class="dv">1024</span>)<span class="op">;</span></span></code></pre></div>
+<p>Choosing the right number of clusters is a balancing act. Too few
+clusters will result in inaccurate self-collision (as the clusters will
+be too large and rigid), while too many clusters will decrease
+performance.</p>
+<h3 id="step-3-increase-solver-iterations">Step 3: Increase Solver
+Iterations</h3>
+<p>Because self-collision introduces complex constraints, you may need
+to increase the position solver iterations to ensure the body does not
+jitter or collapse under stress.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="fu">set_piterations</span>(<span class="dv">4</span>)<span class="op">;</span> <span class="co">// Increase position solver iterations (default is 1)</span></span></code></pre></div>
+<h2 id="performance-optimization">Performance Optimization</h2>
+<p>Because self-collision calculations scale poorly with mesh
+complexity, optimizing your implementation is essential for maintaining
+60 FPS in WebGL environments:</p>
+<ul>
+<li><strong>Use Low-Poly Proxies:</strong> Run the physics simulation on
+a simplified, low-polygon version of the soft body, and bind a
+high-resolution visual mesh to the low-poly physics mesh for
+rendering.</li>
+<li><strong>Adjust Cluster Count dynamically:</strong> Match the number
+of generated clusters to the complexity of the mesh. A simple cape may
+only need 8 to 16 clusters, while a highly detailed cushion might
+require 256 or more.</li>
+<li><strong>Optimize the Bounding Volume Hierarchy (BVH):</strong>
+Ammo.js uses a dynamic AABB tree to broadphase collision pairs. Ensure
+your world's broadphase is configured efficiently to discard
+non-colliding cluster pairs quickly.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

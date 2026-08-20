@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Ammo.js Calculates Drag and Lift on Cloth - ammo.js</title>
+    <meta name="description" content="This article explains how the JavaScript physics engine ammo.js—a direct port of the Bullet Physics SDK—calculates aerodynamic drag and lift forces on soft body cloth simulations. It breaks down the underlying mathematical models, the configuration s">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/how-ammo-js-calculates-drag-and-lift-on-cloth">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Ammo.js Calculates Drag and Lift on Cloth - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/how-ammo-js-calculates-drag-and-lift-on-cloth" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how the JavaScript physics engine ammo.js—a direct port of the Bullet Physics SDK—calculates aerodynamic drag and lift forces on soft body cloth simulations. It breaks down the underlying mathematical models, the configuration s" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="how-ammojs-calculates-drag-and-lift-on-cloth">How Ammo.js
+Calculates Drag and Lift on Cloth</h1>
+<p>This article explains how the JavaScript physics engine ammo.js—a
+direct port of the Bullet Physics SDK—calculates aerodynamic drag and
+lift forces on soft body cloth simulations. It breaks down the
+underlying mathematical models, the configuration settings required to
+enable these forces, and how face-level aerodynamic calculations are
+distributed across a 3D mesh's vertices.</p>
+<h2 id="the-underlying-physics-framework">The Underlying Physics
+Framework</h2>
+<p>Because ammo.js is a direct compiled port of the C++ Bullet Physics
+library, its soft body simulation mechanics are identical to Bullet's
+<code>btSoftBody</code> class. In ammo.js, cloth is represented as a
+mass-spring system or a finite element mesh consisting of vertices
+(nodes) and triangular faces (links/elements).</p>
+<p>Aerodynamic forces like drag and lift are calculated per triangular
+face rather than per vertex. This is because aerodynamic forces depend
+on the surface area exposed to the medium (air or wind) and the
+orientation of that surface relative to the wind flow.</p>
+<h2 id="enabling-aerodynamics-in-ammojs">Enabling Aerodynamics in
+Ammo.js</h2>
+<p>By default, aerodynamic forces are not applied to soft bodies to save
+processing power. To enable them, you must configure the soft body’s
+configuration object (<code>btSoftBody::Config</code>).</p>
+<ol type="1">
+<li><strong>Air Density (<code>kAHR</code>):</strong> This parameter
+represents the density of the medium (air).</li>
+<li><strong>Drag Coefficient (<code>kDG</code>):</strong> This controls
+how much the cloth resists motion through the air.</li>
+<li><strong>Lift Coefficient (<code>kLF</code>):</strong> This controls
+the lifting force generated perpendicular to the air flow.</li>
+<li><strong>Aerodynamic Model (<code>aerofringe</code> or
+<code>eAeroModel</code>):</strong> You must choose an aerodynamic model.
+The most common models for cloth are:
+<ul>
+<li><strong><code>V_TwoSided</code></strong>: Calculates basic
+aerodynamic forces on both sides of the triangles without lift.</li>
+<li><strong><code>V_TwoSidedLiftDrag</code></strong>: Calculates both
+drag and lift on both sides of the triangular faces.</li>
+</ul></li>
+</ol>
+<h2 id="step-by-step-force-calculation">Step-by-Step Force
+Calculation</h2>
+<p>Once aerodynamics are enabled and a wind velocity vector is defined
+in the physics world, ammo.js performs the following calculations during
+each physics simulation step:</p>
+<h3 id="1-calculate-relative-velocity">1. Calculate Relative
+Velocity</h3>
+<p>For every triangular face in the soft body mesh, ammo.js calculates
+the average velocity of its three vertices (<span
+class="math inline">\(\vec{v}_{face}\)</span>). It then determines the
+relative velocity (<span class="math inline">\(\vec{v}_{rel}\)</span>)
+between the wind velocity (<span
+class="math inline">\(\vec{v}_{wind}\)</span>) and the face's
+movement:</p>
+<p><span class="math display">\[\vec{v}_{rel} = \vec{v}_{wind} -
+\vec{v}_{face}\]</span></p>
+<h3 id="2-determine-face-normal-and-area">2. Determine Face Normal and
+Area</h3>
+<p>The engine calculates the surface normal vector (<span
+class="math inline">\(\vec{n}\)</span>) of the triangle to determine its
+orientation. It also calculates the surface area (<span
+class="math inline">\(A\)</span>) of the triangle. The projected area
+facing the wind flow is determined by the dot product of the relative
+velocity and the surface normal:</p>
+<p><span class="math display">\[\cos(\theta) = \frac{\vec{v}_{rel} \cdot
+\vec{n}}{|\vec{v}_{rel}|}\]</span></p>
+<p>This step determines the "angle of attack." If the wind hits the
+cloth face-on, the drag force is maximized. If the wind blows parallel
+to the face, the drag force approaches zero.</p>
+<h3 id="3-compute-drag-force">3. Compute Drag Force</h3>
+<p>Drag acts in the direction of the relative wind velocity, opposing
+the motion of the cloth. Ammo.js computes the drag force vector (<span
+class="math inline">\(\vec{F}_{drag}\)</span>) using a simplified
+aerodynamic drag equation:</p>
+<p><span class="math display">\[\vec{F}_{drag} = C_{drag} \cdot A \cdot
+(\vec{v}_{rel} \cdot \vec{n}) \cdot \vec{v}_{rel}\]</span></p>
+<p>Here, <span class="math inline">\(C_{drag}\)</span> is influenced by
+the user-defined configuration coefficient (<code>kDG</code>) and the
+air density (<code>kAHR</code>). The force is scaled by the relative
+velocity and the projected area.</p>
+<h3 id="4-compute-lift-force">4. Compute Lift Force</h3>
+<p>Lift acts perpendicular to the relative velocity, pushing the cloth
+upward or sideways. Ammo.js calculates the lift force vector (<span
+class="math inline">\(\vec{F}_{lift}\)</span>) using the lift
+coefficient (<code>kLF</code>):</p>
+<p><span class="math display">\[\vec{F}_{lift} = C_{lift} \cdot A \cdot
+(\vec{v}_{rel} \cdot \vec{n}) \cdot (\vec{v}_{rel} \times \vec{n})
+\times \vec{v}_{rel}\]</span></p>
+<p>This cross-product mathematical formulation ensures that lift is
+generated in a direction perpendicular to the incoming air stream,
+causing the cloth to flutter or sail.</p>
+<h3 id="5-distribute-forces-to-vertices">5. Distribute Forces to
+Vertices</h3>
+<p>Once the net aerodynamic force (<span
+class="math inline">\(\vec{F}_{total} = \vec{F}_{drag} +
+\vec{F}_{lift}\)</span>) is calculated for a single triangular face,
+ammo.js distributes this force vector equally among the three vertices
+that define that triangle:</p>
+<p><span class="math display">\[\vec{F}_{vertex} =
+\frac{\vec{F}_{total}}{3}\]</span></p>
+<p>These accumulated forces are added to the external force accumulators
+of the respective nodes. During the integration step of the physics
+solver, these forces alter the velocities and positions of the vertices,
+resulting in realistic behaviors like flags waving in the wind or
+parachutes inflating as they fall.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

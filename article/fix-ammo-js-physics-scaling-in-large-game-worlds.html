@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Ammo.js Physics Scaling in Large Game Worlds - ammo.js</title>
+    <meta name="description" content="Developing large-scale 3D games with ammo.js—the JavaScript port of the Bullet physics engine—often introduces severe physics jitter, tunneling, and collision detection failures. These issues are primarily caused by floating-point precision loss as o">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/fix-ammo-js-physics-scaling-in-large-game-worlds">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fix Ammo.js Physics Scaling in Large Game Worlds - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/fix-ammo-js-physics-scaling-in-large-game-worlds" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Developing large-scale 3D games with ammo.js—the JavaScript port of the Bullet physics engine—often introduces severe physics jitter, tunneling, and collision detection failures. These issues are primarily caused by floating-point precision loss as o" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="fix-ammojs-physics-scaling-in-large-game-worlds">Fix Ammo.js
+Physics Scaling in Large Game Worlds</h1>
+<p>Developing large-scale 3D games with ammo.js—the JavaScript port of
+the Bullet physics engine—often introduces severe physics jitter,
+tunneling, and collision detection failures. These issues are primarily
+caused by floating-point precision loss as objects move far away from
+the world origin (0, 0, 0). This article explains why these scaling
+issues occur and provides practical techniques to resolve them,
+including floating origin systems, optimized physics stepping, and
+dynamic world partitioning.</p>
+<h2 id="the-cause-floating-point-precision-loss">The Cause:
+Floating-Point Precision Loss</h2>
+<p>Ammo.js relies on single-precision 32-bit floating-point numbers
+(<code>float</code>) for its calculations. A 32-bit float has 24 bits of
+precision, which equates to roughly 7 decimal digits of accuracy.</p>
+<p>When your game world extends tens of thousands of units away from the
+origin, the distance values require larger numbers, leaving fewer
+decimal places to represent tiny movements. This results in:</p>
+<ul>
+<li><strong>Jittering:</strong> Objects shake or stutter because the
+engine cannot resolve micro-movements accurately.</li>
+<li><strong>Collision Failures (Tunneling):</strong> Fast-moving objects
+pass through walls because collision detection calculations lose
+precision.</li>
+<li><strong>Inconsistent Gravity and Forces:</strong> Applied forces
+produce unpredictable behavior at extreme coordinates.</li>
+</ul>
+<hr />
+<h2 id="solution-1-implement-a-floating-origin-origin-shifting">Solution
+1: Implement a Floating Origin (Origin Shifting)</h2>
+<p>The most effective way to solve precision loss in a massive world is
+to implement a <strong>Floating Origin</strong> (also known as camera
+relative rendering or origin shifting).</p>
+<p>Instead of letting the player travel infinitely far into the
+coordinate space, you keep the player at or near the origin (0, 0, 0).
+When the player travels beyond a set threshold (e.g., 5,000 units from
+the origin), you shift the entire world—including all active physics
+bodies and the visual scene—in the opposite direction.</p>
+<h3 id="how-to-implement-origin-shifting-in-ammojs">How to implement
+origin shifting in Ammo.js:</h3>
+<ol type="1">
+<li>Define a distance threshold (e.g.,
+<code>THRESHOLD = 5000</code>).</li>
+<li>Track the player's distance from <code>(0, 0, 0)</code>.</li>
+<li>If the threshold is exceeded, calculate the offset vector:
+<code>offset = -player.position</code>.</li>
+<li>Iterate through all active rigid bodies in the Ammo.js world.</li>
+<li>Retrieve each body's world transform, apply the offset to its
+origin, and set the new transform:</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> transform <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> rigidBodies<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> body <span class="op">=</span> rigidBodies[i]<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> motionState <span class="op">=</span> body<span class="op">.</span><span class="fu">getMotionState</span>()<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (motionState) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        motionState<span class="op">.</span><span class="fu">getWorldTransform</span>(transform)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> origin <span class="op">=</span> transform<span class="op">.</span><span class="fu">getOrigin</span>()<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Apply the shift offset</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        origin<span class="op">.</span><span class="fu">setValue</span>(origin<span class="op">.</span><span class="fu">x</span>() <span class="op">+</span> offsetX<span class="op">,</span> origin<span class="op">.</span><span class="fu">y</span>() <span class="op">+</span> offsetY<span class="op">,</span> origin<span class="op">.</span><span class="fu">z</span>() <span class="op">+</span> offsetZ)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        transform<span class="op">.</span><span class="fu">setOrigin</span>(origin)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        body<span class="op">.</span><span class="fu">setWorldTransform</span>(transform)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        motionState<span class="op">.</span><span class="fu">setWorldTransform</span>(transform)<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Clear forces and update interpolation to prevent physics glitches</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        body<span class="op">.</span><span class="fu">activate</span>(<span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h2 id="solution-2-maintain-a-1-unit--1-meter-scale">Solution 2:
+Maintain a 1 Unit = 1 Meter Scale</h2>
+<p>Physics engines are optimized for real-world scales. Bullet Physics
+(and therefore Ammo.js) is tuned for objects between 0.2 meters and 5.0
+meters in size.</p>
+<ul>
+<li><strong>Avoid micro-scales:</strong> Do not make a human character
+0.01 units tall.</li>
+<li><strong>Avoid macro-scales:</strong> Do not make a spaceship 10,000
+units long.</li>
+<li><strong>Normalize your scale:</strong> Keep 1 unit in Ammo.js
+strictly equal to 1 meter. If your world requires vast distances, scale
+down the visual assets and physics representations to fit within this
+optimal range, or use a separate visual-only scaling system.</li>
+</ul>
+<hr />
+<h2 id="solution-3-dynamic-world-partitioning-active-zones">Solution 3:
+Dynamic World Partitioning (Active Zones)</h2>
+<p>In an exceptionally large world, you cannot simulate the physics of
+the entire map simultaneously. This will cripple CPU performance. You
+must partition your world into grid cells or chunks.</p>
+<ol type="1">
+<li><strong>Broadphase Selection:</strong> Ensure you are using
+<code>btDbvtBroadphase</code> (Dynamic AABB Tree Broadphase) instead of
+<code>btAxisSweep3</code>. The sweep-and-prune broadphase requires fixed
+world bounds, whereas <code>btDbvtBroadphase</code> dynamically adapts
+to an expanding world size without performance degradation.</li>
+<li><strong>Active Physics Radius:</strong> Only add rigid bodies to the
+active <code>btDiscreteDynamicsWorld</code> if they are within a certain
+radius of the player.</li>
+<li><strong>Deactivation and Pooling:</strong> When an object exits the
+active radius, remove its rigid body from the physics world and store
+its state in a data structure. Re-instantiate or re-add it to the world
+only when the player approaches again.</li>
+</ol>
+<hr />
+<h2 id="solution-4-optimize-physics-stepping-and-substepping">Solution
+4: Optimize Physics Stepping and Substepping</h2>
+<p>Large worlds with fast-moving entities require precise integration
+steps to prevent tunneling.</p>
+<p>When calling <code>stepSimulation</code>, configure it to allow
+substepping:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// world.stepSimulation( timeStep, maxSubSteps, fixedTimeStep );</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">stepSimulation</span>( deltaTime<span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">1</span> <span class="op">/</span> <span class="dv">60</span> )<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><strong><code>fixedTimeStep</code>:</strong> Keep this consistent
+(typically <code>1/60</code> or <code>1/120</code> for high-precision
+scenarios).</li>
+<li><strong><code>maxSubSteps</code>:</strong> Increase this value
+(e.g., to <code>10</code> or <code>12</code>) if you have high-velocity
+objects. This ensures that even if the frame rate drops, the engine
+performs enough sub-ticks to resolve fast collisions accurately without
+letting objects pass through geometry.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

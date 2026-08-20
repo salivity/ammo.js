@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Input with Ammo.js in a Web Worker - ammo.js</title>
+    <meta name="description" content="Running a heavy physics engine like ammo.js in an asynchronous Web Worker keeps the main rendering thread responsive, but it introduces the challenge of input synchronization. Because Web Workers do not have access to the DOM, they cannot directly listen">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/sync-input-with-ammo-js-in-a-web-worker">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sync Input with Ammo.js in a Web Worker - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/sync-input-with-ammo-js-in-a-web-worker" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Running a heavy physics engine like ammo.js in an asynchronous Web Worker keeps the main rendering thread responsive, but it introduces the challenge of input synchronization. Because Web Workers do not have access to the DOM, they cannot directly listen" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="sync-input-with-ammojs-in-a-web-worker">Sync Input with Ammo.js
+in a Web Worker</h1>
+<p>Running a heavy physics engine like <code>ammo.js</code> in an
+asynchronous Web Worker keeps the main rendering thread responsive, but
+it introduces the challenge of input synchronization. Because Web
+Workers do not have access to the DOM, they cannot directly listen to
+keyboard, mouse, or gamepad events. This article explains how to capture
+user inputs on the main thread, stream them efficiently to the physics
+worker, and apply them to Ammo.js rigid bodies without causing
+simulation lag.</p>
+<h2 id="the-architecture">The Architecture</h2>
+<p>To sync inputs with a physics worker, you must establish a one-way
+data flow:</p>
+<ol type="1">
+<li><strong>Main Thread:</strong> Captures DOM input events, updates an
+input state object, and sends this state to the worker.</li>
+<li><strong>Worker Thread:</strong> Receives the input state, applies
+corresponding forces or velocities to Ammo.js rigid bodies, steps the
+physics simulation, and sends the updated entity transforms back to the
+main thread for rendering.</li>
+</ol>
+<h2 id="step-1-capturing-input-on-the-main-thread">Step 1: Capturing
+Input on the Main Thread</h2>
+<p>On the main thread, maintain a clean representation of the current
+input state. Avoid sending raw DOM events directly to the worker;
+instead, serialize only the necessary directional values or action
+states.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> inputState <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">forward</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">backward</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">left</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">right</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">jump</span><span class="op">:</span> <span class="kw">false</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;keydown&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> (e<span class="op">.</span><span class="at">code</span>) {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyW&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">forward</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyS&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">backward</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyA&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">left</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyD&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">right</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;Space&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">jump</span> <span class="op">=</span> <span class="kw">true</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sendInputToWorker</span>()<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;keyup&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> (e<span class="op">.</span><span class="at">code</span>) {</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyW&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">forward</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyS&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">backward</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyA&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">left</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;KeyD&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">right</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="st">&#39;Space&#39;</span><span class="op">:</span> inputState<span class="op">.</span><span class="at">jump</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sendInputToWorker</span>()<span class="op">;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">sendInputToWorker</span>() {</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    physicsWorker<span class="op">.</span><span class="fu">postMessage</span>({</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;INPUT_UPDATE&#39;</span><span class="op">,</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>        <span class="dt">inputs</span><span class="op">:</span> { <span class="op">...</span>inputState }</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="step-2-handling-inputs-in-the-physics-worker">Step 2: Handling
+Inputs in the Physics Worker</h2>
+<p>Inside the Web Worker, listen for the incoming input messages and
+update a local copy of the input state. During the physics step loop,
+apply these inputs to the corresponding Ammo.js rigid bodies as forces,
+impulses, or direct velocity changes.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> localInputState <span class="op">=</span> { <span class="dt">forward</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">backward</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">left</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">right</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">jump</span><span class="op">:</span> <span class="kw">false</span> }<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> playerBody <span class="op">=</span> <span class="kw">null</span><span class="op">;</span> <span class="co">// Assigned when Ammo.js initializes the player</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>self<span class="op">.</span><span class="at">onmessage</span> <span class="op">=</span> <span class="kw">function</span>(e) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&#39;INPUT_UPDATE&#39;</span>) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        localInputState <span class="op">=</span> e<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">inputs</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Inside the physics tick loop</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">updatePhysics</span>(deltaTime) {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (playerBody) {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> speed <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> moveVector <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            (localInputState<span class="op">.</span><span class="at">right</span> <span class="op">-</span> localInputState<span class="op">.</span><span class="at">left</span>) <span class="op">*</span> speed<span class="op">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            (localInputState<span class="op">.</span><span class="at">backward</span> <span class="op">-</span> localInputState<span class="op">.</span><span class="at">forward</span>) <span class="op">*</span> speed</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Fetch current linear velocity to preserve gravity (Y axis)</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> currentVelocity <span class="op">=</span> playerBody<span class="op">.</span><span class="fu">getLinearVelocity</span>()<span class="op">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        moveVector<span class="op">.</span><span class="fu">setY</span>(currentVelocity<span class="op">.</span><span class="fu">y</span>())<span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (localInputState<span class="op">.</span><span class="at">jump</span> <span class="op">&amp;&amp;</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(currentVelocity<span class="op">.</span><span class="fu">y</span>()) <span class="op">&lt;</span> <span class="fl">0.01</span>) {</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>            moveVector<span class="op">.</span><span class="fu">setY</span>(<span class="dv">5</span>)<span class="op">;</span> <span class="co">// Apply upward jump impulse</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        playerBody<span class="op">.</span><span class="fu">setLinearVelocity</span>(moveVector)<span class="op">;</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        Ammo<span class="op">.</span><span class="fu">destroy</span>(moveVector)<span class="op">;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Step simulation</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    physicsWorld<span class="op">.</span><span class="fu">stepSimulation</span>(deltaTime<span class="op">,</span> <span class="dv">10</span>)<span class="op">;</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Send updated transforms back to main thread</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sendTransformsToMainThread</span>()<span class="op">;</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="step-3-optimization-with-sharedarraybuffer-optional">Step 3:
+Optimization with SharedArrayBuffer (Optional)</h2>
+<p>For high-performance scenarios where <code>postMessage</code>
+serialization overhead becomes a bottleneck, use a
+<code>SharedArrayBuffer</code>. This allows both the main thread and the
+worker thread to read and write to the same memory space instantly.</p>
+<ol type="1">
+<li>Create a SharedArrayBuffer on the main thread to hold the input
+values (e.g., using a <code>Float32Array</code>).</li>
+<li>Pass the buffer to the worker during initialization.</li>
+<li>The main thread writes to the shared array on input events using
+atomic operations (<code>Atomics.store</code>).</li>
+<li>The worker reads from the shared array directly in its physics loop
+using <code>Atomics.load</code>, completely bypassing the
+<code>postMessage</code> queue for input updates.</li>
+</ol></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

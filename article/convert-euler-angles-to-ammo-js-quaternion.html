@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Euler Angles to Ammo.js Quaternion - ammo.js</title>
+    <meta name="description" content="This article provides a straightforward guide on how to reliably convert standard Euler angles (pitch, yaw, and roll) into a valid Ammo.js quaternion. We will explore the native Ammo.js API method, demonstrate a common integration path using Three.js, an">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/convert-euler-angles-to-ammo-js-quaternion">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Convert Euler Angles to Ammo.js Quaternion - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/convert-euler-angles-to-ammo-js-quaternion" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a straightforward guide on how to reliably convert standard Euler angles (pitch, yaw, and roll) into a valid Ammo.js quaternion. We will explore the native Ammo.js API method, demonstrate a common integration path using Three.js, an" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="convert-euler-angles-to-ammojs-quaternion">Convert Euler Angles
+to Ammo.js Quaternion</h1>
+<p>This article provides a straightforward guide on how to reliably
+convert standard Euler angles (pitch, yaw, and roll) into a valid
+Ammo.js quaternion. We will explore the native Ammo.js API method,
+demonstrate a common integration path using Three.js, and highlight key
+pitfalls like axis ordering and memory management to ensure your 3D
+physics rotations behave predictably.</p>
+<h2 id="the-native-ammojs-method">The Native Ammo.js Method</h2>
+<p>Ammo.js (a direct Emscripten port of the Bullet Physics engine)
+includes a built-in utility on the <code>btQuaternion</code> class
+designed specifically for Euler conversions:
+<code>setEulerZYX()</code>.</p>
+<p>To use this method successfully, you must pass your angles in
+<strong>radians</strong> and follow the Yaw-Pitch-Roll convention (which
+corresponds to rotations around the Y, X, and Z axes respectively).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Define your rotation angles in radians</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> roll  <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span> <span class="co">// Rotation around Z-axis</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> pitch <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">4</span><span class="op">;</span> <span class="co">// Rotation around X-axis (45 degrees)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> yaw   <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">2</span><span class="op">;</span> <span class="co">// Rotation around Y-axis (90 degrees)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Instantiate a new Ammo quaternion</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ammoQuaternion <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btQuaternion</span>()<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Apply the Euler angles using the ZYX convention</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Note the parameter order: setEulerZYX(yaw, pitch, roll)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>ammoQuaternion<span class="op">.</span><span class="fu">setEulerZYX</span>(yaw<span class="op">,</span> pitch<span class="op">,</span> roll)<span class="op">;</span></span></code></pre></div>
+<h3 id="understanding-the-parameter-order">Understanding the Parameter
+Order</h3>
+<p>A common point of failure is passing parameters in the wrong order.
+The <code>setEulerZYX</code> method expects:</p>
+<ol type="1">
+<li><strong>First argument</strong>: Yaw (rotation around the
+Y-axis)</li>
+<li><strong>Second argument</strong>: Pitch (rotation around the
+X-axis)</li>
+<li><strong>Third argument</strong>: Roll (rotation around the
+Z-axis)</li>
+</ol>
+<hr />
+<h2 id="the-threejs-integration-method">The Three.js Integration
+Method</h2>
+<p>Because Ammo.js is frequently paired with Three.js, developers often
+have rotation data stored in a <code>THREE.Euler</code> object. The most
+reliable way to convert this is to let Three.js handle the
+Euler-to-quaternion math, and then copy the resulting values into
+Ammo.js.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Create a Three.js Euler angle (XYZ order by default)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> euler <span class="op">=</span> <span class="kw">new</span> THREE<span class="op">.</span><span class="fu">Euler</span>(pitch<span class="op">,</span> yaw<span class="op">,</span> roll<span class="op">,</span> <span class="st">&#39;XYZ&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Convert Euler to a Three.js Quaternion</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> threeQuaternion <span class="op">=</span> <span class="kw">new</span> THREE<span class="op">.</span><span class="fu">Quaternion</span>()<span class="op">.</span><span class="fu">setFromEuler</span>(euler)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Create and populate the Ammo.js Quaternion</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ammoQuaternion <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btQuaternion</span>(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    threeQuaternion<span class="op">.</span><span class="at">x</span><span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    threeQuaternion<span class="op">.</span><span class="at">y</span><span class="op">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    threeQuaternion<span class="op">.</span><span class="at">z</span><span class="op">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    threeQuaternion<span class="op">.</span><span class="at">w</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code></pre></div>
+<p>This approach is highly reliable because it leverages Three.js's
+robust handling of arbitrary rotation orders (such as <code>YXZ</code>
+or <code>ZYX</code>) before passing the absolute spatial orientation
+coordinates directly to Ammo.js.</p>
+<hr />
+<h2 id="key-best-practices">Key Best Practices</h2>
+<ul>
+<li><strong>Always Use Radians:</strong> Ammo.js operates strictly in
+radians. If your input angles are in degrees, convert them first using
+the formula: <code>radians = degrees * (Math.PI / 180)</code>.</li>
+<li><strong>Memory Management:</strong> Ammo.js objects are compiled
+from C++ and do not benefit from automatic JavaScript garbage
+collection. If you are creating quaternions inside an animation or
+physics update loop, you must manually destroy them when they are no
+longer needed to prevent memory leaks:
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Ammo<span class="op">.</span><span class="fu">destroy</span>(ammoQuaternion)<span class="op">;</span></span></code></pre></div></li>
+<li><strong>Verify Normalization:</strong> A valid quaternion
+representing a rotation must have a length of 1. If you manually modify
+the coordinates of a quaternion, call
+<code>ammoQuaternion.normalize()</code> to ensure it remains valid for
+the physics engine.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

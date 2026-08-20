@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Move Ammo.js Rigid Body Without Breaking Physics - ammo.js</title>
+    <meta name="description" content="Moving an active rigid body in ammo.js (the JavaScript port of the Bullet physics engine) requires careful handling to prevent glitches, clipping, or breaking the physics solver. This article explains the three safest methods to translate or teleport an">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/move-ammo-js-rigid-body-without-breaking-physics">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Move Ammo.js Rigid Body Without Breaking Physics - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/move-ammo-js-rigid-body-without-breaking-physics" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Moving an active rigid body in ammo.js (the JavaScript port of the Bullet physics engine) requires careful handling to prevent glitches, clipping, or breaking the physics solver. This article explains the three safest methods to translate or teleport an" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="move-ammojs-rigid-body-without-breaking-physics">Move Ammo.js
+Rigid Body Without Breaking Physics</h1>
+<p>Moving an active rigid body in <code>ammo.js</code> (the JavaScript
+port of the Bullet physics engine) requires careful handling to prevent
+glitches, clipping, or breaking the physics solver. This article
+explains the three safest methods to translate or teleport an active
+rigid body: resetting its world transform with state activation,
+applying physical forces, and utilizing kinematic states for manual
+control.</p>
+<h2 id="method-1-safe-teleportation-direct-position-update">Method 1:
+Safe Teleportation (Direct Position Update)</h2>
+<p>Directly modifying a rigid body's position during an active
+simulation can cause severe physics glitches, such as objects passing
+through walls or experiencing extreme velocity spikes. To safely
+teleport a rigid body, you must update its world transform, update its
+motion state, reset its velocities, and force the body to wake up.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">teleportBody</span>(body<span class="op">,</span> position<span class="op">,</span> rotation) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Create a new transform</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> transform <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">.</span><span class="fu">setIdentity</span>()<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Set the new origin (position)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> ammoPosition <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(position<span class="op">.</span><span class="at">x</span><span class="op">,</span> position<span class="op">.</span><span class="at">y</span><span class="op">,</span> position<span class="op">.</span><span class="at">z</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">.</span><span class="fu">setOrigin</span>(ammoPosition)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Set the rotation (quaternion)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> ammoRotation <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btQuaternion</span>(rotation<span class="op">.</span><span class="at">x</span><span class="op">,</span> rotation<span class="op">.</span><span class="at">y</span><span class="op">,</span> rotation<span class="op">.</span><span class="at">z</span><span class="op">,</span> rotation<span class="op">.</span><span class="at">w</span>)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">.</span><span class="fu">setRotation</span>(ammoRotation)<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Apply to both the world transform and the motion state</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    body<span class="op">.</span><span class="fu">setWorldTransform</span>(transform)<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (body<span class="op">.</span><span class="fu">getMotionState</span>()) {</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        body<span class="op">.</span><span class="fu">getMotionState</span>()<span class="op">.</span><span class="fu">setWorldTransform</span>(transform)<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Reset velocities to prevent &quot;slingshot&quot; physics bugs</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> zeroVector <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    body<span class="op">.</span><span class="fu">setLinearVelocity</span>(zeroVector)<span class="op">;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    body<span class="op">.</span><span class="fu">setAngularVelocity</span>(zeroVector)<span class="op">;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 6. Force the physics engine to re-evaluate the body</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    body<span class="op">.</span><span class="fu">activate</span>(<span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clean up memory</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    Ammo<span class="op">.</span><span class="fu">destroy</span>(transform)<span class="op">;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    Ammo<span class="op">.</span><span class="fu">destroy</span>(ammoPosition)<span class="op">;</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    Ammo<span class="op">.</span><span class="fu">destroy</span>(ammoRotation)<span class="op">;</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    Ammo<span class="op">.</span><span class="fu">destroy</span>(zeroVector)<span class="op">;</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="method-2-physics-based-movement-forces-and-impulses">Method 2:
+Physics-Based Movement (Forces and Impulses)</h2>
+<p>If you want the body to move naturally while interacting with the
+environment, do not set the position directly. Instead, apply forces or
+impulses. This allows the solver to calculate collisions and friction
+realistically.</p>
+<ul>
+<li><strong>Continuous Force:</strong> Use
+<code>applyCentralForce</code> for constant movement (like a
+thruster).</li>
+<li><strong>Instantaneous Impulse:</strong> Use
+<code>applyCentralImpulse</code> for sudden movement (like a jump or
+explosion).</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply a continuous push (run this in your physics update loop)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> force <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(x<span class="op">,</span> y<span class="op">,</span> z)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">applyCentralForce</span>(force)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">activate</span>(<span class="kw">true</span>)<span class="op">;</span> <span class="co">// Ensure the body is awake</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Ammo<span class="op">.</span><span class="fu">destroy</span>(force)<span class="op">;</span></span></code></pre></div>
+<h2 id="method-3-direct-velocity-manipulation">Method 3: Direct Velocity
+Manipulation</h2>
+<p>For precise control (such as a player character or a moving platform)
+where you want instantaneous movement without ignoring physics
+collisions, set the linear velocity directly.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Set a specific velocity vector</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> velocity <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(velocityX<span class="op">,</span> velocityY<span class="op">,</span> velocityZ)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">setLinearVelocity</span>(velocity)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">activate</span>(<span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>Ammo<span class="op">.</span><span class="fu">destroy</span>(velocity)<span class="op">;</span></span></code></pre></div>
+<h2 id="method-4-switch-to-a-kinematic-body">Method 4: Switch to a
+Kinematic Body</h2>
+<p>If you need to manually control an object's position frame-by-frame
+while still allowing it to push other dynamic objects out of the way,
+convert the body to a <strong>Kinematic Object</strong>. Kinematic
+bodies are not affected by gravity or forces; they are moved solely by
+your code.</p>
+<p>To set up a kinematic body during initialization:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get existing collision flags and add the kinematic flag</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> kinematicFlag <span class="op">=</span> <span class="dv">2</span><span class="op">;</span> <span class="co">// btCollisionObject::CF_KINEMATIC_OBJECT</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">setCollisionFlags</span>(body<span class="op">.</span><span class="fu">getCollisionFlags</span>() <span class="op">|</span> kinematicFlag)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Disable gravity influence</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">setActivationState</span>(<span class="dv">4</span>)<span class="op">;</span> <span class="co">// DISABLE_DEACTIVATION</span></span></code></pre></div>
+<p>To move a kinematic body, update its motion state transform inside
+your render/update loop:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">moveKinematicBody</span>(body<span class="op">,</span> position) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> transform <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">.</span><span class="fu">setIdentity</span>()<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> ammoPosition <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btVector3</span>(position<span class="op">.</span><span class="at">x</span><span class="op">,</span> position<span class="op">.</span><span class="at">y</span><span class="op">,</span> position<span class="op">.</span><span class="at">z</span>)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">.</span><span class="fu">setOrigin</span>(ammoPosition)<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    body<span class="op">.</span><span class="fu">getMotionState</span>()<span class="op">.</span><span class="fu">setWorldTransform</span>(transform)<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    Ammo<span class="op">.</span><span class="fu">destroy</span>(transform)<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    Ammo<span class="op">.</span><span class="fu">destroy</span>(ammoPosition)<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

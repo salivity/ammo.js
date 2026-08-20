@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Constraint Solver and Cyclic Dependencies - ammo.js</title>
+    <meta name="description" content="This article explores how ammo.js, a JavaScript port of the Bullet physics engine, manages cyclic dependencies within complex, heavily constrained structures. We examine the core mechanics of its iterative Sequential Impulse (SI) solver, how it resolves">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-constraint-solver-and-cyclic-dependencies">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Constraint Solver and Cyclic Dependencies - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-constraint-solver-and-cyclic-dependencies" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how ammo.js, a JavaScript port of the Bullet physics engine, manages cyclic dependencies within complex, heavily constrained structures. We examine the core mechanics of its iterative Sequential Impulse (SI) solver, how it resolves" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-constraint-solver-and-cyclic-dependencies">Ammo.js
+Constraint Solver and Cyclic Dependencies</h1>
+<p>This article explores how ammo.js, a JavaScript port of the Bullet
+physics engine, manages cyclic dependencies within complex, heavily
+constrained structures. We examine the core mechanics of its iterative
+Sequential Impulse (SI) solver, how it resolves conflicting joint
+demands without falling into infinite loops, and the optimization
+techniques used to maintain simulation stability in highly articulated
+systems.</p>
+<h2 id="the-sequential-impulse-solver">The Sequential Impulse
+Solver</h2>
+<p>At the heart of ammo.js lies a Projected Gauss-Seidel (PGS) solver,
+implemented as a Sequential Impulse (SI) solver. Unlike direct global
+solvers that attempt to solve the entire system of constraints
+simultaneously using complex matrix inversions, the SI solver operates
+locally and iteratively.</p>
+<p>In a system with cyclic dependencies—such as a closed loop of joints
+(e.g., a ragdoll holding its own feet or a closed mechanical
+linkage)—direct solvers can become computationally expensive or
+mathematically unstable due to over-determined or conflicting
+constraints. The SI solver bypasses this by visiting each constraint
+individually, calculating the impulse required to satisfy that single
+constraint, applying it immediately to the connected rigid bodies, and
+then moving to the next constraint.</p>
+<h2 id="resolving-cyclic-loops-via-iterative-relaxation">Resolving
+Cyclic Loops via Iterative Relaxation</h2>
+<p>Because the solver updates the velocities of rigid bodies immediately
+after processing each constraint, the effects of an impulse applied at
+one joint instantly propagate to neighboring joints.</p>
+<p>When cyclic dependencies are present:</p>
+<ol type="1">
+<li><strong>Local Resolution:</strong> The solver resolves Constraint A,
+which slightly perturbs the state of Constraint B.</li>
+<li><strong>Propagation:</strong> When the solver evaluates Constraint
+B, it accounts for the new velocities introduced by Constraint A.</li>
+<li><strong>Feedback Loop:</strong> By the time the solver completes a
+full pass and returns to Constraint A, the feedback from the entire
+cycle has propagated back.</li>
+</ol>
+<p>This process is repeated over multiple iterations per physics step
+(defined by the <code>numIterations</code> parameter). Rather than
+finding an exact mathematical solution to the entire loop at once, the
+solver "relaxes" the system toward a stable state. With enough
+iterations, the velocities of the bodies in the cyclic structure
+converge to a state that satisfies all constraints simultaneously.</p>
+<h2 id="key-stabilization-mechanisms">Key Stabilization Mechanisms</h2>
+<p>To prevent cyclic dependencies from causing infinite jitter,
+stretching, or physical explosions, ammo.js employs several mathematical
+stabilization techniques:</p>
+<h3 id="1-constraint-force-mixing-cfm">1. Constraint Force Mixing
+(CFM)</h3>
+<p>In highly constrained cyclic structures, it is common to have
+redundant or mathematically impossible configurations (e.g., three rigid
+bars connected in a triangle where the joint limits conflict). CFM adds
+a small, positive value to the diagonal of the constraint matrix. This
+effectively softens the constraints, transforming hard, unyielding
+joints into slightly elastic ones. CFM ensures the system remains
+mathematically solvable, preventing division-by-zero errors and allowing
+conflicting cycles to resolve without exploding.</p>
+<h3 id="2-error-reduction-parameter-erp">2. Error Reduction Parameter
+(ERP)</h3>
+<p>ERP dictates how much of the positional joint error (displacement) is
+corrected in each physics step. Because cyclic structures easily
+accumulate positional drift, ERP works alongside CFM to slowly pull
+drifted bodies back into alignment over several frames, rather than
+trying to correct the entire error in a single frame, which would
+introduce massive, destabilizing forces into the cycle.</p>
+<h3 id="3-warm-starting">3. Warm Starting</h3>
+<p>At the beginning of each physics step, ammo.js does not start solving
+from scratch. Instead, it "warm starts" the solver by applying a
+fraction of the impulses calculated in the previous frame. For cyclic
+structures, which tend to maintain similar stress patterns from frame to
+frame, warm starting provides an excellent initial guess. This
+significantly accelerates convergence and keeps cyclic structures stable
+even with a lower iteration count.</p>
+<h2 id="performance-and-limitations">Performance and Limitations</h2>
+<p>While the iterative nature of ammo.js allows it to handle cyclic
+dependencies robustly without crashing, heavily constrained structures
+can still suffer from "softness" or stretching if the solver cannot
+converge quickly enough.</p>
+<p>If a cyclic system appears loose or unstable, stability can be
+improved by:</p>
+<ul>
+<li><strong>Increasing Solver Iterations:</strong> Giving the SI solver
+more passes to propagate impulses through the cycles.</li>
+<li><strong>Substepping:</strong> Reducing the physics time step
+(<code>fixedTimeStep</code>) to limit the amount of error that
+accumulates between solver runs.</li>
+<li><strong>Reducing Mass Ratios:</strong> Avoiding large differences in
+mass between connected bodies within the cycle, as extreme mass ratios
+slow down impulse propagation and hinder convergence.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

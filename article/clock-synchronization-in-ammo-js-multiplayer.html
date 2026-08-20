@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock Synchronization in Ammo.js Multiplayer - ammo.js</title>
+    <meta name="description" content="This article provides a practical guide on how to establish clock synchronization for deterministic multiplayer physics simulations using ammo.js (the WebAssembly port of Bullet Physics). It covers the mathematical logic behind network time synchronizati">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/clock-synchronization-in-ammo-js-multiplayer">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Clock Synchronization in Ammo.js Multiplayer - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/clock-synchronization-in-ammo-js-multiplayer" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a practical guide on how to establish clock synchronization for deterministic multiplayer physics simulations using ammo.js (the WebAssembly port of Bullet Physics). It covers the mathematical logic behind network time synchronizati" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="clock-synchronization-in-ammojs-multiplayer">Clock
+Synchronization in Ammo.js Multiplayer</h1>
+<p>This article provides a practical guide on how to establish clock
+synchronization for deterministic multiplayer physics simulations using
+ammo.js (the WebAssembly port of Bullet Physics). It covers the
+mathematical logic behind network time synchronization, the
+implementation of a fixed physics timestep, and how to execute
+client-side prediction and reconciliation to keep physics states aligned
+across the network.</p>
+<h3 id="the-challenge-of-determinism-in-ammojs">The Challenge of
+Determinism in Ammo.js</h3>
+<p>Ammo.js is a deterministic physics engine, meaning that given the
+exact same initial state and inputs, it will produce the identical
+output. However, in a multiplayer environment, network latency and
+variable frame rates cause clients to process inputs at different
+real-world times. To maintain determinism, every client and the server
+must run the physics simulation at the exact same logical ticks,
+requiring a highly accurate synchronized clock.</p>
+<h3 id="step-1-implementing-network-time-synchronization">Step 1:
+Implementing Network Time Synchronization</h3>
+<p>To synchronize the client clock with the server, you must calculate
+the network latency (Round-Trip Time, or RTT) and the clock offset
+between the machines. This is achieved using a simplified Network Time
+Protocol (NTP) handshake:</p>
+<ol type="1">
+<li>The client sends a ping containing its current local timestamp
+(<span class="math inline">\(T_1\)</span>).</li>
+<li>The server receives the ping and immediately sends a pong containing
+the server's current timestamp (<span
+class="math inline">\(T_2\)</span>) along with the client's original
+timestamp (<span class="math inline">\(T_1\)</span>).</li>
+<li>The client receives the pong at local timestamp (<span
+class="math inline">\(T_3\)</span>).</li>
+</ol>
+<p>With these three timestamps, the client calculates the Round-Trip
+Time and the clock offset (<span
+class="math inline">\(\theta\)</span>):</p>
+<p><span class="math display">\[\text{RTT} = T_3 - T_1\]</span> <span
+class="math display">\[\theta = T_2 - \left(T_1 +
+\frac{\text{RTT}}{2}\right)\]</span></p>
+<p>By adding the offset <span class="math inline">\(\theta\)</span> to
+the client’s local system clock, the client can calculate the current
+server time. Because network jitter can skew individual measurements,
+you should sample this offset periodically (e.g., every 3 seconds) and
+apply a rolling average or a Kalman filter to smooth out spikes.</p>
+<h3 id="step-2-enforcing-a-fixed-timestep-in-ammojs">Step 2: Enforcing a
+Fixed Timestep in Ammo.js</h3>
+<p>A variable delta time passed to ammo.js will immediately break
+determinism. You must configure ammo.js to step using a strictly fixed
+timestep (usually 60Hz, or 0.01666s).</p>
+<p>When stepping the simulation, do not rely on the engine's internal
+interpolation. Instead, manage the accumulator manually and run the
+simulation using a sub-step size of 0 to force discrete execution:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Ensure we step exactly by our fixed interval</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> fixedTimeStep <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> <span class="dv">60</span><span class="op">;</span> </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> physicsAccumulator <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">updatePhysics</span>(deltaTime) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    physicsAccumulator <span class="op">+=</span> deltaTime<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> (physicsAccumulator <span class="op">&gt;=</span> fixedTimeStep) {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// stepSimulation(timeStep, maxSubSteps, fixedTimeStep)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Setting maxSubSteps to 0 forces Ammo to step exactly by fixedTimeStep</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        dynamicsWorld<span class="op">.</span><span class="fu">stepSimulation</span>(fixedTimeStep<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> fixedTimeStep)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        physicsAccumulator <span class="op">-=</span> fixedTimeStep<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        localTick<span class="op">++;</span> <span class="co">// Increment local simulation tick</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="step-3-client-side-prediction-and-reconciliation">Step 3:
+Client-Side Prediction and Reconciliation</h3>
+<p>With the clock synchronized, the client can run its simulation ahead
+of the server by the one-way latency duration (<span
+class="math inline">\(\text{RTT} / 2\)</span>). This allows user inputs
+to feel instantaneous.</p>
+<p>To resolve discrepancies when the server sends authoritative state
+updates, implement input prediction and reconciliation:</p>
+<ol type="1">
+<li><strong>Input Buffering:</strong> The client stores its inputs and
+the resulting physics states (positions, rotations, linear/angular
+velocities) in a historical ring buffer, indexed by the synchronized
+tick number.</li>
+<li><strong>Server Verification:</strong> The server processes inputs
+sequentially based on the synchronized ticks and periodically broadcasts
+the authoritative state of all rigid bodies, stamped with the tick
+number.</li>
+<li><strong>Reconciliation:</strong> When the client receives a server
+state for tick <span class="math inline">\(N\)</span>, it compares its
+buffered state at tick <span class="math inline">\(N\)</span> with the
+server's state. If the difference exceeds a tiny threshold (accounting
+for minor floating-point drift):
+<ul>
+<li>The client snaps the ammo.js rigid bodies back to the server's
+authoritative position and velocity values.</li>
+<li>The client clears the accumulated physics time and re-runs the
+physics loop from tick <span class="math inline">\(N\)</span> up to the
+current predicted local tick, re-applying the buffered inputs
+sequentially.</li>
+</ul></li>
+</ol>
+<h3 id="step-4-mitigating-webassembly-platform-drift">Step 4: Mitigating
+WebAssembly Platform Drift</h3>
+<p>While WebAssembly executes the same compiled C++ code of Bullet,
+slight differences in floating-point math execution (such as x87 80-bit
+floats vs. SSE 64-bit floats, or browser-specific JavaScript engine
+optimizations) can lead to minor divergences over time.</p>
+<p>To prevent these drifts from causing permanent desynchronization, the
+server must act as the ultimate authority. Always apply a
+soft-correction (lerping/hermite interpolation) to visual meshes when
+reconciling, rather than hard-snapping, to keep the gameplay visual
+experience smooth while the underlying ammo.js rigid bodies are
+precisely corrected to match the synchronized server simulation.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

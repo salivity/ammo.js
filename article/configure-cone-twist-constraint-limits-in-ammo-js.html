@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure Cone-Twist Constraint Limits in Ammo.js - ammo.js</title>
+    <meta name="description" content="This article explains how to configure the angular limits of a cone-twist constraint in ammo.js, the JavaScript port of the Bullet Physics engine. You will learn how to define the swing and twist boundaries using the setLimit method and apply these setti">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/configure-cone-twist-constraint-limits-in-ammo-js">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Configure Cone-Twist Constraint Limits in Ammo.js - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/configure-cone-twist-constraint-limits-in-ammo-js" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to configure the angular limits of a cone-twist constraint in ammo.js, the JavaScript port of the Bullet Physics engine. You will learn how to define the swing and twist boundaries using the setLimit method and apply these setti" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="configure-cone-twist-constraint-limits-in-ammojs">Configure
+Cone-Twist Constraint Limits in Ammo.js</h1>
+<p>This article explains how to configure the angular limits of a
+cone-twist constraint in ammo.js, the JavaScript port of the Bullet
+Physics engine. You will learn how to define the swing and twist
+boundaries using the <code>setLimit</code> method and apply these
+settings to create realistic ragdoll joints or mechanical linkages in
+your 3D physics simulation.</p>
+<h2 id="understanding-the-cone-twist-constraint">Understanding the
+Cone-Twist Constraint</h2>
+<p>The cone-twist constraint (represented by
+<code>btConeTwistConstraint</code> in ammo.js) is a special
+point-to-point constraint that limits rotation of a rigid body within a
+cone-shaped area, while also restricting the torsional twist around its
+own axis. This is highly useful for organic joints like shoulders and
+hips.</p>
+<p>To control the range of motion, you must define three main angular
+limits, all measured in radians:</p>
+<ul>
+<li><strong>Swing Span 1</strong>: The maximum swing angle allowed along
+the first perpendicular axis.</li>
+<li><strong>Swing Span 2</strong>: The maximum swing angle allowed along
+the second perpendicular axis.</li>
+<li><strong>Twist Span</strong>: The maximum allowed rotation (twist)
+around the main joint axis.</li>
+</ul>
+<h2 id="step-by-step-configuration">Step-by-Step Configuration</h2>
+<p>To configure the limits, you must construct the constraint, define
+your limit variables, and then call the <code>setLimit</code>
+method.</p>
+<h3 id="1-create-the-constraint">1. Create the Constraint</h3>
+<p>First, instantiate the constraint by passing two rigid bodies and
+their respective local attachment transforms.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Assuming bodyA and bodyB are btRigidBody instances,</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// and transformA and transformB are btTransform instances.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> coneTwistConstraint <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btConeTwistConstraint</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    bodyA<span class="op">,</span> </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    bodyB<span class="op">,</span> </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    transformA<span class="op">,</span> </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    transformB</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code></pre></div>
+<h3 id="2-define-and-apply-the-limits">2. Define and Apply the
+Limits</h3>
+<p>The <code>setLimit</code> method in ammo.js accepts up to six
+parameters. The first three are the angular limits, while the remaining
+three are optional parameters for joint physics tuning:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Define limit angles in radians</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> swingSpan1 <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">4</span><span class="op">;</span> <span class="co">// 45 degrees</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> swingSpan2 <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">4</span><span class="op">;</span> <span class="co">// 45 degrees</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> twistSpan <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">/</span> <span class="dv">6</span><span class="op">;</span>  <span class="co">// 30 degrees</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Tuning parameters (optional, defaults shown)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> softness <span class="op">=</span> <span class="fl">0.8</span><span class="op">;</span>          <span class="co">// Limits elasticity (0.0 to 1.0)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> biasFactor <span class="op">=</span> <span class="fl">0.3</span><span class="op">;</span>        <span class="co">// Speed at which error is corrected</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> relaxationFactor <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span>  <span class="co">// Resistance to dampening</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply limits to the constraint</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>coneTwistConstraint<span class="op">.</span><span class="fu">setLimit</span>(</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    swingSpan1<span class="op">,</span> </span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    swingSpan2<span class="op">,</span> </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    twistSpan<span class="op">,</span> </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    softness<span class="op">,</span> </span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    biasFactor<span class="op">,</span> </span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    relaxationFactor</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code></pre></div>
+<p>If you only wish to define the angles and use default physics
+behavior, you can call <code>setLimit</code> with just three
+parameters:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>coneTwistConstraint<span class="op">.</span><span class="fu">setLimit</span>(swingSpan1<span class="op">,</span> swingSpan2<span class="op">,</span> twistSpan)<span class="op">;</span></span></code></pre></div>
+<h3 id="3-add-to-the-physics-world">3. Add to the Physics World</h3>
+<p>Once configured, add the constraint to your active ammo.js dynamics
+world so it can be simulated.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// True/false determines if the constrained bodies should collide with each other</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">addConstraint</span>(coneTwistConstraint<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span></code></pre></div></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

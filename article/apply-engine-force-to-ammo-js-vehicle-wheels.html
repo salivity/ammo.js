@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply Engine Force to Ammo.js Vehicle Wheels - ammo.js</title>
+    <meta name="description" content="This article explains how to apply engine force to specific wheels of a raycast vehicle using the ammo.js physics library. You will learn how wheel indexing works within the btRaycastVehicle class and how to programmatically control individual wheels to">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/apply-engine-force-to-ammo-js-vehicle-wheels">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Apply Engine Force to Ammo.js Vehicle Wheels - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/apply-engine-force-to-ammo-js-vehicle-wheels" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to apply engine force to specific wheels of a raycast vehicle using the ammo.js physics library. You will learn how wheel indexing works within the btRaycastVehicle class and how to programmatically control individual wheels to" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="apply-engine-force-to-ammojs-vehicle-wheels">Apply Engine Force
+to Ammo.js Vehicle Wheels</h1>
+<p>This article explains how to apply engine force to specific wheels of
+a raycast vehicle using the ammo.js physics library. You will learn how
+wheel indexing works within the <code>btRaycastVehicle</code> class and
+how to programmatically control individual wheels to configure
+rear-wheel, front-wheel, or all-wheel drive systems.</p>
+<h2 id="understanding-wheel-indices">Understanding Wheel Indices</h2>
+<p>In ammo.js, wheels are referenced by a zero-based index. The index of
+a wheel is determined by the order in which you added it to the vehicle
+using the <code>addWheel</code> method.</p>
+<p>Typically, wheels are added in the following order:</p>
+<ul>
+<li><strong>Index 0:</strong> Front-Left Wheel</li>
+<li><strong>Index 1:</strong> Front-Right Wheel</li>
+<li><strong>Index 2:</strong> Rear-Left Wheel</li>
+<li><strong>Index 3:</strong> Rear-Right Wheel</li>
+</ul>
+<p>If your vehicle setup script adds the wheels in a different order,
+your indices will change accordingly. Always match your drive logic to
+the exact sequence in which your wheels were registered.</p>
+<h2 id="using-the-applyengineforce-method">Using the applyEngineForce
+Method</h2>
+<p>To apply power to a wheel, use the <code>applyEngineForce</code>
+method on your <code>btRaycastVehicle</code> instance. This method takes
+two arguments:</p>
+<ol type="1">
+<li><strong>Force (Number):</strong> The amount of torque/force to
+apply. Positive values move the vehicle forward, while negative values
+move it in reverse.</li>
+<li><strong>Wheel Index (Integer):</strong> The index of the wheel to
+which the force should be applied.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Syntax: vehicle.applyEngineForce(force, wheelIndex);</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(<span class="dv">1000</span><span class="op">,</span> <span class="dv">2</span>)<span class="op">;</span> </span></code></pre></div>
+<h2 id="implementing-drive-configurations">Implementing Drive
+Configurations</h2>
+<p>Depending on your physics requirements, you can apply force to
+specific wheels to create different drivetrain layouts.</p>
+<h3 id="rear-wheel-drive-rwd">Rear-Wheel Drive (RWD)</h3>
+<p>To power only the rear wheels (typically indices 2 and 3), apply the
+force to those specific indices while setting the front wheels (0 and 1)
+to zero engine force.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> force <span class="op">=</span> <span class="dv">1500</span><span class="op">;</span> <span class="co">// Define your engine force</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply force to rear wheels</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(force<span class="op">,</span> <span class="dv">2</span>)<span class="op">;</span> <span class="co">// Rear-Left</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(force<span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span> <span class="co">// Rear-Right</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Ensure no engine force is on the front wheels</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span> </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="front-wheel-drive-fwd">Front-Wheel Drive (FWD)</h3>
+<p>To power only the front wheels, apply the force to indices 0 and
+1.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> force <span class="op">=</span> <span class="dv">1500</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply force to front wheels</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(force<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span> <span class="co">// Front-Left</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(force<span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span> <span class="co">// Front-Right</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Ensure no engine force is on the rear wheels</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="all-wheel-drive-awd">All-Wheel Drive (AWD)</h3>
+<p>To distribute power to all wheels, loop through every wheel index and
+apply the force. You can split the force equally or distribute it based
+on a front/back bias.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> force <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply equal force to all four wheels</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    vehicle<span class="op">.</span><span class="fu">applyEngineForce</span>(force<span class="op">,</span> i)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="important-considerations">Important Considerations</h2>
+<ul>
+<li><strong>Continuous Updates:</strong> <code>applyEngineForce</code>
+must be called on every frame within your physics update loop. If you
+stop calling it, the vehicle will coast to a stop based on friction and
+roll resistance.</li>
+<li><strong>Mass and Friction:</strong> If the vehicle does not move
+despite applying force, check your vehicle chassis mass and wheel
+suspension settings. Excessively low wheel friction
+(<code>m_frictionSlip</code>) will cause the wheels to spin in place
+without gripping the ground.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Buoyancy in Ammo.js Physics - ammo.js</title>
+    <meta name="description" content="This article explores how the ammo.js physics library handles experimental buoyancy and basic fluid interactions. Because ammo.js is a direct JavaScript port of the C++ Bullet Physics engine, it focuses primarily on rigid body dynamics and does not featu">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/implementing-buoyancy-in-ammo-js-physics">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Implementing Buoyancy in Ammo.js Physics - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/implementing-buoyancy-in-ammo-js-physics" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how the ammo.js physics library handles experimental buoyancy and basic fluid interactions. Because ammo.js is a direct JavaScript port of the C++ Bullet Physics engine, it focuses primarily on rigid body dynamics and does not featu" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="implementing-buoyancy-in-ammojs-physics">Implementing Buoyancy
+in Ammo.js Physics</h1>
+<p>This article explores how the <code>ammo.js</code> physics library
+handles experimental buoyancy and basic fluid interactions. Because
+<code>ammo.js</code> is a direct JavaScript port of the C++ Bullet
+Physics engine, it focuses primarily on rigid body dynamics and does not
+feature a built-in, real-time fluid solver. Instead, developers simulate
+buoyancy and fluid drag by combining collision triggers, calculating
+submerged volumes, and manually applying custom force vectors to rigid
+bodies.</p>
+<h2 id="the-core-architecture-of-ammojs-fluids">The Core Architecture of
+Ammo.js Fluids</h2>
+<p>Standard builds of <code>ammo.js</code> do not include active
+Smoothed Particle Hydrodynamics (SPH) or native Navier-Stokes solvers
+due to performance constraints in browser environments. Instead, the
+library relies on approximation methods. To simulate an object floating
+in water, developers must manually bridge the gap between collision
+detection and custom force application.</p>
+<p>This approximation is achieved through a three-step pipeline:
+detection, force calculation, and damping.</p>
+<h2 id="step-1-fluid-volume-detection-ghost-objects">Step 1: Fluid
+Volume Detection (Ghost Objects)</h2>
+<p>To simulate fluid, you must define the boundaries of the liquid. In
+<code>ammo.js</code>, this is represented by a sensor volume or a "Ghost
+Object" (<code>btGhostObject</code>).</p>
+<ul>
+<li><strong>Sensor Setup:</strong> A collision shape (usually a box or
+cylinder) is designated as a trigger by setting its collision flags to
+<code>CF_NO_CONTACT_RESPONSE</code>. This allows other rigid bodies to
+pass through it without bouncing off the surface.</li>
+<li><strong>Overlap Detection:</strong> During the physics world step,
+the engine checks for overlapping pairs. If a dynamic rigid body
+intersects with the ghost object representing the fluid, it triggers the
+buoyancy calculations.</li>
+</ul>
+<h2 id="step-2-applying-buoyancy-forces">Step 2: Applying Buoyancy
+Forces</h2>
+<p>Once a rigid body is detected inside the fluid volume, you must
+manually apply an upward force to counteract gravity. This relies on
+Archimedes' principle: the upward buoyant force is equal to the weight
+of the fluid displaced by the object.</p>
+<p>To implement this in <code>ammo.js</code>:</p>
+<ol type="1">
+<li><strong>Calculate Submergence Depth:</strong> Determine how far
+below the fluid's surface plane the rigid body’s center of mass is
+located.</li>
+<li><strong>Determine Displaced Volume:</strong> Calculate a scalar
+multiplier based on how much of the object is submerged (e.g., 0% at the
+surface, 100% when fully underwater).</li>
+<li><strong>Apply Central Force:</strong> Apply an upward force vector
+using the <code>applyCentralForce()</code> method on the rigid
+body.</li>
+</ol>
+<p>The formula used in the physics tick callback looks like this:</p>
+<p><span class="math display">\[\vec{F}_{buoyancy} = \vec{u} \times
+(\rho \times V_{submerged} \times g)\]</span></p>
+<p>Where <span class="math inline">\(\vec{u}\)</span> is the upward
+vector, <span class="math inline">\(\rho\)</span> is the fluid density,
+<span class="math inline">\(V_{submerged}\)</span> is the volume
+submerged, and <span class="math inline">\(g\)</span> is the gravity
+constant.</p>
+<h2 id="step-3-simulating-fluid-drag-and-viscosity">Step 3: Simulating
+Fluid Drag and Viscosity</h2>
+<p>An upward force alone will cause a floating object to bob up and down
+indefinitely. To make the interaction realistic, you must simulate water
+resistance (drag).</p>
+<p><code>ammo.js</code> handles this through damping properties. When an
+object enters the fluid volume, you must dynamically increase its linear
+and angular damping factors using:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>rigidBody<span class="op">.</span><span class="fu">setDamping</span>(linearDamping<span class="op">,</span> angularDamping)<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><strong>Linear Damping:</strong> Simulates the fluid resistance
+slowing down the object's travel speed.</li>
+<li><strong>Angular Damping:</strong> Simulates rotational resistance,
+stopping the object from spinning endlessly underwater.</li>
+</ul>
+<p>When the object exits the fluid volume, these values must be restored
+to their default atmospheric settings.</p>
+<h2 id="experimental-soft-body-and-particle-approaches">Experimental
+Soft Body and Particle Approaches</h2>
+<p>For visual fluid interactions, developers sometimes leverage the
+experimental soft body dynamics in <code>ammo.js</code>
+(<code>btSoftBody</code>). Deformable meshes can be configured with low
+stiffness to mimic gelatinous surfaces or basic soft-body fluid
+envelopes.</p>
+<p>Alternatively, SPH particle simulations can be managed in external
+JavaScript code, using <code>ammo.js</code> rigid bodies as kinematic
+colliders that push particles aside. However, for standard gameplay and
+physics interactions, the rigid body trigger-and-force method remains
+the most performant and reliable choice.</p></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

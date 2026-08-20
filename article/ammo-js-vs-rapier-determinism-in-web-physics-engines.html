@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js vs Rapier: Determinism in Web Physics Engines - ammo.js</title>
+    <meta name="description" content="This article compares the deterministic capabilities of Ammo.js and the Rapier physics engine within web browser environments. It explores how each engine handles physics simulations, why cross-platform determinism is challenging in browsers, and how the">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-vs-rapier-determinism-in-web-physics-engines">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js vs Rapier: Determinism in Web Physics Engines - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-vs-rapier-determinism-in-web-physics-engines" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article compares the deterministic capabilities of Ammo.js and the Rapier physics engine within web browser environments. It explores how each engine handles physics simulations, why cross-platform determinism is challenging in browsers, and how the" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-vs-rapier-determinism-in-web-physics-engines">Ammo.js vs
+Rapier: Determinism in Web Physics Engines</h1>
+<p>This article compares the deterministic capabilities of Ammo.js and
+the Rapier physics engine within web browser environments. It explores
+how each engine handles physics simulations, why cross-platform
+determinism is challenging in browsers, and how these two libraries
+differ in keeping simulations consistent across different devices,
+operating systems, and browsers.</p>
+<h2 id="understanding-physics-determinism-in-the-browser">Understanding
+Physics Determinism in the Browser</h2>
+<p>In physics simulation, determinism means that given the exact same
+initial state and inputs, the simulation will produce identical results
+every time it is run. In web browsers, achieving determinism is critical
+for multiplayer games using lockstep synchronization, server-side
+verification, and repeatable bug debugging.</p>
+<p>However, browser environments introduce several variables that break
+determinism, including differences in JavaScript engine optimization (V8
+vs. JavaScriptCore vs. Spidermonkey), differences in CPU architectures
+(x86 vs. ARM/Apple Silicon), and variations in how floating-point math
+(IEEE 754) is executed across platforms.</p>
+<h2
+id="ammojs-ported-determinism-with-cross-platform-challenges">Ammo.js:
+Ported Determinism with Cross-Platform Challenges</h2>
+<p>Ammo.js is a direct port of the C++ Bullet Physics engine to
+JavaScript and WebAssembly (Wasm) using Emscripten. Because Bullet is a
+mature, production-grade engine, it is highly stable. However, its
+approach to determinism in the browser has notable limitations:</p>
+<ul>
+<li><strong>Single-Platform Determinism:</strong> Ammo.js can achieve
+local determinism. If you run the same simulation on the same machine,
+browser, and hardware, the results will remain consistent.</li>
+<li><strong>Cross-Platform Discrepancies:</strong> Bullet was not
+originally designed with strict cross-platform floating-point
+determinism in mind. When compiled to WebAssembly, subtle differences in
+how different CPUs (such as an Intel Core i9 versus an Apple M-series
+chip) handle fused multiply-add (FMA) instructions or floating-point
+rounding can cause simulations to diverge over time.</li>
+<li><strong>Constraint Solver Order:</strong> The order of constraint
+resolution in Ammo.js can sometimes vary depending on how memory is
+allocated and processed by the browser's WebAssembly runtime, leading to
+different simulation outcomes on different devices.</li>
+</ul>
+<p>To make Ammo.js deterministic across platforms, developers must
+compile it with strict, often performance-degrading compiler flags, and
+carefully control the fixed time-step and solver iterations.</p>
+<h2 id="rapier-designed-for-cross-platform-determinism">Rapier: Designed
+for Cross-Platform Determinism</h2>
+<p>Rapier is a modern 2D and 3D physics engine written in Rust and
+compiled to WebAssembly. Unlike Ammo.js, Rapier was designed from the
+ground up to support deterministic execution across different
+platforms.</p>
+<ul>
+<li><strong>Strict Determinism Mode:</strong> Rapier features a
+dedicated compilation flag and runtime setting for strict determinism.
+When enabled, Rapier avoids using hardware-specific floating-point
+instructions that behave differently on x86 and ARM architectures.</li>
+<li><strong>Consistent Solver Execution:</strong> Rapier guarantees that
+the order of operations in its physics solver is entirely independent of
+the platform, memory layout, or JS engine. This ensures that a
+simulation run on an iPhone running Safari will yield the exact same
+coordinate outputs as a Windows PC running Chrome.</li>
+<li><strong>Platform-Independent Math:</strong> While Rapier uses
+standard IEEE 754 floating-point math, it carefully controls execution
+paths to prevent compilers from generating non-deterministic
+instructions (like automatic vectorization that varies by CPU).</li>
+</ul>
+<h2 id="key-comparison-points">Key Comparison Points</h2>
+<h3 id="1-developer-implementation">1. Developer Implementation</h3>
+<ul>
+<li><strong>Ammo.js:</strong> Requires deep knowledge of Bullet Physics
+internals, manual management of fixed time-steps, and careful
+configuration of the constraint solver to minimize divergence.</li>
+<li><strong>Rapier:</strong> Offers out-of-the-box cross-platform
+determinism with a simple configuration toggle, requiring no low-level
+engine modifications.</li>
+</ul>
+<h3 id="2-performance-impact">2. Performance Impact</h3>
+<ul>
+<li><strong>Ammo.js:</strong> Attempting to force determinism can
+severely impact performance, as it limits the browser's ability to
+optimize WebAssembly execution.</li>
+<li><strong>Rapier:</strong> Is highly optimized in Rust. While its
+strict deterministic mode disables certain platform-specific
+optimizations, it remains highly performant and consistently faster than
+Ammo.js in most browser-based scenarios.</li>
+</ul>
+<h3 id="3-best-use-cases">3. Best Use Cases</h3>
+<ul>
+<li><strong>Ammo.js:</strong> Best suited for single-player 3D web games
+or projects where minor physical discrepancies between players do not
+affect gameplay.</li>
+<li><strong>Rapier:</strong> Best suited for multiplayer web games,
+competitive physics-based projects, and simulations requiring
+authoritative server reconciliation.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

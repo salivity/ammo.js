@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Custom User Data to Ammo.js Rigid Body - ammo.js</title>
+    <meta name="description" content="When integrating the Ammo.js physics engine with a 3D graphics library like Three.js, you often need to identify which graphical mesh corresponds to a specific rigid body during collision detection. Because Ammo.js is a WebAssembly/Emscripten port of Bul">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/assign-custom-user-data-to-ammo-js-rigid-body">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Assign Custom User Data to Ammo.js Rigid Body - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/assign-custom-user-data-to-ammo-js-rigid-body" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When integrating the Ammo.js physics engine with a 3D graphics library like Three.js, you often need to identify which graphical mesh corresponds to a specific rigid body during collision detection. Because Ammo.js is a WebAssembly/Emscripten port of Bul" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="assign-custom-user-data-to-ammojs-rigid-body">Assign Custom User
+Data to Ammo.js Rigid Body</h1>
+<p>When integrating the Ammo.js physics engine with a 3D graphics
+library like Three.js, you often need to identify which graphical mesh
+corresponds to a specific rigid body during collision detection. Because
+Ammo.js is a WebAssembly/Emscripten port of Bullet Physics, standard
+JavaScript object properties attached directly to Ammo objects can be
+lost when wrappers are recreated. This article explains how to reliably
+use the native C++ <code>setUserPointer</code> and
+<code>getUserPointer</code> methods to assign and retrieve custom user
+data for quick identification.</p>
+<hr />
+<h3 id="the-challenge-with-webassembly-wrappers">The Challenge with
+WebAssembly Wrappers</h3>
+<p>In Ammo.js, objects like <code>btRigidBody</code> are JavaScript
+wrappers pointing to raw memory in the WebAssembly heap. If you attempt
+to assign a custom property directly to the object (e.g.,
+<code>rigidBody.myMesh = mesh</code>), this reference may disappear.
+When Ammo.js returns collision objects during a collision manifold
+check, it often instantiates <em>new</em> JavaScript wrappers for the
+same underlying C++ pointers, meaning your custom property will be
+<code>undefined</code>.</p>
+<p>To prevent this, you must use the native memory-safe methods provided
+by the Bullet API.</p>
+<h3 id="step-1-establish-a-lookup-map">Step 1: Establish a Lookup
+Map</h3>
+<p>Because the native <code>setUserPointer</code> method only accepts an
+integer (representing a memory address or index) rather than a complex
+JavaScript object, the most reliable approach is to map unique integer
+IDs to your JavaScript objects.</p>
+<p>Three.js meshes, for example, have a built-in auto-incrementing
+integer <code>id</code>. Create a global or scoped map to hold these
+associations:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> physicsLookupMap <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span>()<span class="op">;</span></span></code></pre></div>
+<h3 id="step-2-assign-the-user-pointer">Step 2: Assign the User
+Pointer</h3>
+<p>When creating your rigid body, register your 3D mesh (or custom data
+object) in your map using its unique ID. Then, pass that ID to the rigid
+body using <code>setUserPointer</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Create your visual mesh (e.g., Three.js Mesh)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mesh <span class="op">=</span> <span class="kw">new</span> THREE<span class="op">.</span><span class="fu">Mesh</span>(geometry<span class="op">,</span> material)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>scene<span class="op">.</span><span class="fu">add</span>(mesh)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Create your Ammo.js rigid body</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> transform <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btTransform</span>()<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// ... setup transform, mass, localInertia, motionState, and shape ...</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> rbInfo <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btRigidBodyConstructionInfo</span>(mass<span class="op">,</span> motionState<span class="op">,</span> shape<span class="op">,</span> localInertia)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> body <span class="op">=</span> <span class="kw">new</span> Ammo<span class="op">.</span><span class="fu">btRigidBody</span>(rbInfo)<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Store the mesh in your lookup map using its unique integer ID</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>physicsLookupMap<span class="op">.</span><span class="fu">set</span>(mesh<span class="op">.</span><span class="at">id</span><span class="op">,</span> mesh)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. Assign the integer ID to the Ammo.js rigid body</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>body<span class="op">.</span><span class="fu">setUserPointer</span>(mesh<span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">// 5. Add the body to the physics world</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>physicsWorld<span class="op">.</span><span class="fu">addRigidBody</span>(body)<span class="op">;</span></span></code></pre></div>
+<h3 id="step-3-retrieve-the-user-pointer-during-collisions">Step 3:
+Retrieve the User Pointer During Collisions</h3>
+<p>When processing collisions inside your physics loop, you can extract
+the user pointer from the colliding bodies and look up the corresponding
+JavaScript objects instantly.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> dispatcher <span class="op">=</span> physicsWorld<span class="op">.</span><span class="fu">getDispatcher</span>()<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numManifolds <span class="op">=</span> dispatcher<span class="op">.</span><span class="fu">getNumManifolds</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> numManifolds<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> manifold <span class="op">=</span> dispatcher<span class="op">.</span><span class="fu">getManifoldByIndexInternal</span>(i)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> numContacts <span class="op">=</span> manifold<span class="op">.</span><span class="fu">getNumContacts</span>()<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (numContacts <span class="op">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Cast the generic collision objects to btCollisionObject</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> objA <span class="op">=</span> Ammo<span class="op">.</span><span class="fu">castObject</span>(manifold<span class="op">.</span><span class="fu">getBody0</span>()<span class="op">,</span> Ammo<span class="op">.</span><span class="at">btCollisionObject</span>)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> objB <span class="op">=</span> Ammo<span class="op">.</span><span class="fu">castObject</span>(manifold<span class="op">.</span><span class="fu">getBody1</span>()<span class="op">,</span> Ammo<span class="op">.</span><span class="at">btCollisionObject</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Retrieve the stored integer IDs</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> idA <span class="op">=</span> objA<span class="op">.</span><span class="fu">getUserPointer</span>()<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> idB <span class="op">=</span> objB<span class="op">.</span><span class="fu">getUserPointer</span>()<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Fetch the original Three.js meshes from your map</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> meshA <span class="op">=</span> physicsLookupMap<span class="op">.</span><span class="fu">get</span>(idA)<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> meshB <span class="op">=</span> physicsLookupMap<span class="op">.</span><span class="fu">get</span>(idB)<span class="op">;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (meshA <span class="op">&amp;&amp;</span> meshB) {</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Collision detected between Mesh </span><span class="sc">${</span>meshA<span class="op">.</span><span class="at">name</span><span class="sc">}</span><span class="vs"> and Mesh </span><span class="sc">${</span>meshB<span class="op">.</span><span class="at">name</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="cleaning-up-memory">Cleaning Up Memory</h3>
+<p>To avoid memory leaks, ensure that you delete entries from your
+lookup map whenever a physics body and its associated mesh are removed
+from your scene:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">removeEntity</span>(body<span class="op">,</span> mesh) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    physicsWorld<span class="op">.</span><span class="fu">removeRigidBody</span>(body)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    physicsLookupMap<span class="op">.</span><span class="fu">delete</span>(mesh<span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clean up Ammo memory</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    Ammo<span class="op">.</span><span class="fu">destroy</span>(body)<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

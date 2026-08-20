@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ammo.js Documentation for Advanced Web Developers - ammo.js</title>
+    <meta name="description" content="Web developers looking to implement advanced physics simulations with ammo.js often find that JavaScript-specific documentation is scarce. Since ammo.js is a direct Emscripten port of the C++ Bullet Physics engine, mastering its advanced features require">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/ammo-js-documentation-for-advanced-web-developers">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ammo.js Documentation for Advanced Web Developers - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/ammo-js-documentation-for-advanced-web-developers" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Web developers looking to implement advanced physics simulations with ammo.js often find that JavaScript-specific documentation is scarce. Since ammo.js is a direct Emscripten port of the C++ Bullet Physics engine, mastering its advanced features require" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="ammojs-documentation-for-advanced-web-developers">Ammo.js
+Documentation for Advanced Web Developers</h1>
+<p>Web developers looking to implement advanced physics simulations with
+ammo.js often find that JavaScript-specific documentation is scarce.
+Since ammo.js is a direct Emscripten port of the C++ Bullet Physics
+engine, mastering its advanced features requires consulting the original
+C++ documentation and source files. This article highlights the
+essential official resources, API references, and IDL files that web
+developers must use to navigate the advanced capabilities of
+ammo.js.</p>
+<h3 id="1-the-bullet-physics-user-manual">1. The Bullet Physics User
+Manual</h3>
+<p>The official Bullet Physics User Manual is the primary conceptual
+guide for ammo.js. Available as a PDF from the official Bullet Physics
+GitHub repository, this document explains the core architecture of the
+physics engine. It covers critical concepts such as rigid body dynamics,
+collision shapes, constraints (joints), soft bodies, and multi-body
+systems. Understanding these C++ concepts is essential because ammo.js
+mirrors this architecture exactly.</p>
+<h3 id="2-bullet-c-api-reference-doxygen">2. Bullet C++ API Reference
+(Doxygen)</h3>
+<p>For class-level details, developers should consult the Bullet C++ API
+Reference, which is generated via Doxygen. Since ammo.js functions and
+classes map directly to their C++ counterparts, this reference is
+invaluable. It provides details on:</p>
+<ul>
+<li><strong>Class Methods and Parameters:</strong> Discovering hidden
+method overloads that are not documented in JavaScript.</li>
+<li><strong>Default Values:</strong> Understanding the default physics
+behaviors and thresholds defined in the C++ headers.</li>
+<li><strong>Inheritance Hierarchies:</strong> Identifying which classes
+inherit from others, which is crucial for correct type-casting in
+ammo.js.</li>
+</ul>
+<h3 id="3-the-ammoidl-file">3. The ammo.idl File</h3>
+<p>The ultimate source of truth for what is actually accessible in
+JavaScript is the <code>ammo.idl</code> file, located in the root of the
+official ammo.js GitHub repository. This WebIDL (Interface Definition
+Language) file defines the exact bridge between the C++ Bullet engine
+and the JavaScript runtime.</p>
+<ul>
+<li><strong>What to look for:</strong> If a Bullet class or method is
+not defined in this file, it cannot be called in JavaScript.</li>
+<li><strong>Custom Builds:</strong> Advanced developers can edit this
+file to expose missing C++ classes or methods and recompile ammo.js
+using Emscripten.</li>
+</ul>
+<h3 id="4-bullet-physics-github-source-code">4. Bullet Physics GitHub
+Source Code</h3>
+<p>When documentation is insufficient, reading the original C++ source
+code on the Bullet Physics GitHub repository is the most reliable way to
+understand advanced features.</p>
+<ul>
+<li><strong>Collision Callbacks:</strong> To implement advanced
+collision filtering or custom contact point processing, web developers
+should look at Bullet's C++ collision demos.</li>
+<li><strong>Solver Internals:</strong> Advanced optimization of
+constraints and constraint solvers often requires analyzing the
+underlying C++ logic to see how parameters like constraint impulse
+limits are processed.</li>
+</ul>
+<h3 id="how-to-translate-c-resources-to-javascript">How to Translate C++
+Resources to JavaScript</h3>
+<p>When using these C++ resources, developers must apply a few
+translation rules for ammo.js:</p>
+<ul>
+<li><strong>Memory Management:</strong> C++ pointers and references
+require explicit memory management in ammo.js. Developers must manually
+call <code>Ammo.destroy(object)</code> on instantiated objects to
+prevent memory leaks in the browser.</li>
+<li><strong>Getters and Setters:</strong> C++ public member variables
+are often accessed in ammo.js via auto-generated getter and setter
+functions (e.g., <code>vector.getX()</code> and
+<code>vector.setX()</code>).</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

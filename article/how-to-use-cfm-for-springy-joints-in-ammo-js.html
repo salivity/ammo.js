@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Use CFM for Springy Joints in Ammo.js - ammo.js</title>
+    <meta name="description" content="This article explains how to use Constraint Force Mixing (CFM) and Error Reduction Parameter (ERP) in ammo.js to configure springy, elastic physics joints. You will learn the mechanics behind these two parameters, how they interact to simulate spring-dam">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/how-to-use-cfm-for-springy-joints-in-ammo-js">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Use CFM for Springy Joints in Ammo.js - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/how-to-use-cfm-for-springy-joints-in-ammo-js" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to use Constraint Force Mixing (CFM) and Error Reduction Parameter (ERP) in ammo.js to configure springy, elastic physics joints. You will learn the mechanics behind these two parameters, how they interact to simulate spring-dam" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="how-to-use-cfm-for-springy-joints-in-ammojs">How to Use CFM for
+Springy Joints in Ammo.js</h1>
+<p>This article explains how to use Constraint Force Mixing (CFM) and
+Error Reduction Parameter (ERP) in ammo.js to configure springy, elastic
+physics joints. You will learn the mechanics behind these two
+parameters, how they interact to simulate spring-damper systems, and the
+exact code implementation required to apply them to your
+constraints.</p>
+<p>In ammo.js (a direct port of the Bullet physics engine), constraints
+are rigid by default. To make a joint behave like a spring, you must
+adjust two parameters: <strong>Constraint Force Mixing (CFM)</strong>
+and the <strong>Error Reduction Parameter (ERP)</strong>.</p>
+<h3 id="understanding-cfm-and-erp">Understanding CFM and ERP</h3>
+<p>To simulate elasticity, ammo.js allows joints to be violated slightly
+and specifies how they should recover.</p>
+<ul>
+<li><strong>CFM (Constraint Force Mixing):</strong> Defines the
+"softness" of the constraint. A CFM of <code>0</code> makes the
+constraint completely rigid. A positive CFM value allows the connected
+bodies to violate the constraint boundaries, acting like a spring.</li>
+<li><strong>ERP (Error Reduction Parameter):</strong> Defines how fast
+the constraint error (the violation of the joint's limit) is corrected.
+It represents the restoring force. An ERP of <code>0</code> means no
+correction (the joint will stretch and never pull back), while an ERP of
+<code>1</code> means the joint tries to correct all error in a single
+simulation step.</li>
+</ul>
+<h3 id="mathematical-mapping-to-spring-constants">Mathematical Mapping
+to Spring Constants</h3>
+<p>If you have a specific spring stiffness (<span
+class="math inline">\(k\)</span>) and damping (<span
+class="math inline">\(c\)</span>), you can calculate the corresponding
+ERP and CFM values using your physics time step (<span
+class="math inline">\(h\)</span>):</p>
+<p><span class="math display">\[\text{ERP} = \frac{h \cdot k}{h \cdot k
++ c}\]</span></p>
+<p><span class="math display">\[\text{CFM} = \frac{1}{h \cdot k +
+c}\]</span></p>
+<h3 id="implementation-in-ammojs">Implementation in Ammo.js</h3>
+<p>To apply these parameters to a constraint, such as a
+<code>btGeneric6DofConstraint</code> (6 Degrees of Freedom), use the
+<code>setParam</code> method.</p>
+<p>Below is the JavaScript code to configure a springy axis on a
+constraint:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Assuming &#39;constraint&#39; is an instantiated Ammo.btGeneric6DofConstraint</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// and &#39;Ammo&#39; is the loaded WebAssembly/JS module.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Bullet/Ammo.js Enum values for parameters</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> BT_CONSTRAINT_ERP <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> BT_CONSTRAINT_CFM <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Target axis:</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 0, 1, 2 correspond to linear translation (X, Y, Z)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">// 3, 4, 5 correspond to angular rotation (X, Y, Z)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> AXIS_X <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Calculate or define your ERP and CFM values</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> erpVal <span class="op">=</span> <span class="fl">0.3</span><span class="op">;</span> <span class="co">// Low ERP for a softer, slower spring rebound</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> cfmVal <span class="op">=</span> <span class="fl">0.1</span><span class="op">;</span> <span class="co">// High CFM to allow joint deviation</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply the parameters to the constraint</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>constraint<span class="op">.</span><span class="fu">setParam</span>(BT_CONSTRAINT_ERP<span class="op">,</span> erpVal<span class="op">,</span> AXIS_X)<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>constraint<span class="op">.</span><span class="fu">setParam</span>(BT_CONSTRAINT_CFM<span class="op">,</span> cfmVal<span class="op">,</span> AXIS_X)<span class="op">;</span></span></code></pre></div>
+<h3 id="tips-for-tuning-springy-joints">Tips for Tuning Springy
+Joints</h3>
+<ol type="1">
+<li><strong>Keep CFM Small:</strong> CFM values should generally be
+small (e.g., between <code>0.001</code> and <code>0.5</code>). Extremely
+high CFM values will make the joint completely disconnect or behave
+erratically.</li>
+<li><strong>Configure All Active Axes:</strong> If you want a 3D spring,
+you must apply the ERP and CFM settings to axes <code>0</code>,
+<code>1</code>, and <code>2</code> individually.</li>
+<li><strong>Use Stop Parameters for Limits:</strong> If your joint has
+limits enabled, use <code>BT_CONSTRAINT_STOP_ERP</code> (3) and
+<code>BT_CONSTRAINT_STOP_CFM</code> (4) to define the springiness
+specifically when the joint hits its limit boundaries.</li>
+</ol></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

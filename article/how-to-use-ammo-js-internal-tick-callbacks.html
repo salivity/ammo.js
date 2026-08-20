@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Use Ammo.js Internal Tick Callbacks - ammo.js</title>
+    <meta name="description" content="This article explains how to set up and use custom JavaScript callback functions within the ammo.js physics engine during its internal simulation ticks. You will learn why these callbacks are necessary for precise physics manipulation, how to register th">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/how-to-use-ammo-js-internal-tick-callbacks">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Use Ammo.js Internal Tick Callbacks - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/how-to-use-ammo-js-internal-tick-callbacks" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to set up and use custom JavaScript callback functions within the ammo.js physics engine during its internal simulation ticks. You will learn why these callbacks are necessary for precise physics manipulation, how to register th" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="how-to-use-ammojs-internal-tick-callbacks">How to Use Ammo.js
+Internal Tick Callbacks</h1>
+<p>This article explains how to set up and use custom JavaScript
+callback functions within the ammo.js physics engine during its internal
+simulation ticks. You will learn why these callbacks are necessary for
+precise physics manipulation, how to register them using the dynamics
+world API, and how to differentiate between pre-tick and post-tick
+execution.</p>
+<p>Yes, you can set up custom JavaScript callback functions that fire
+during the internal ticks of ammo.js. Because ammo.js is a direct port
+of the Bullet Physics library, it inherits the capability to execute
+user-defined code at each internal physics substep rather than just once
+per render frame.</p>
+<h2 id="why-internal-tick-callbacks-are-necessary">Why Internal Tick
+Callbacks are Necessary</h2>
+<p>In a typical web application, the physics world is updated once per
+render frame using <code>dynamicsWorld.stepSimulation(timeStep)</code>.
+However, to maintain simulation accuracy, ammo.js may split a single
+frame's time step into multiple internal substeps (ticks).</p>
+<p>If you apply forces or modify velocities in your main render loop,
+those changes only occur once per frame. To apply continuous forces
+(like gravity zones or wind) or to read collision data precisely at
+every physics calculation, you must hook into the internal substeps
+using tick callbacks.</p>
+<h2 id="the-setinternaltickcallback-method">The
+<code>setInternalTickCallback</code> Method</h2>
+<p>To register a callback, you use the
+<code>setInternalTickCallback</code> method available on the
+<code>btDynamicsWorld</code> object.</p>
+<h3 id="syntax">Syntax</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>dynamicsWorld<span class="op">.</span><span class="fu">setInternalTickCallback</span>(callbackPointer<span class="op">,</span> userPersistentData<span class="op">,</span> isPreTick)<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><strong><code>callbackPointer</code></strong>: A pointer to your
+JavaScript function. Because ammo.js is compiled via Emscripten, you
+must wrap your JavaScript function using <code>Ammo.addFunction</code>
+to create a C++ compatible function pointer.</li>
+<li><strong><code>userPersistentData</code></strong>: An optional
+argument (usually set to <code>null</code> or <code>0</code>) to pass
+custom user data to the callback.</li>
+<li><strong><code>isPreTick</code></strong>: A boolean flag. Set this to
+<code>true</code> to run the callback <em>before</em> the physics
+substep simulation. Set it to <code>false</code> (or omit it) to run the
+callback <em>after</em> the physics substep simulation.</li>
+</ul>
+<h2 id="step-by-step-implementation">Step-by-Step Implementation</h2>
+<p>Below is a practical example of how to implement and register a
+post-tick callback in JavaScript.</p>
+<h3 id="1-create-the-callback-function">1. Create the Callback
+Function</h3>
+<p>The callback function receives two arguments from the physics engine:
+a pointer to the dynamics world and the duration of the current physics
+time step.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">myTickCallback</span>(worldPtr<span class="op">,</span> timeStep) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Wrap the raw pointer back into an Ammo object to use it</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> world <span class="op">=</span> Ammo<span class="op">.</span><span class="fu">wrapPointer</span>(worldPtr<span class="op">,</span> Ammo<span class="op">.</span><span class="at">btDynamicsWorld</span>)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Your custom physics logic goes here</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For example, applying a constant upward force to a specific body</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="2-wrap-the-function-with-emscripten">2. Wrap the Function with
+Emscripten</h3>
+<p>Because ammo.js runs in WebAssembly/asm.js, you must register the
+JavaScript function with Emscripten's function table. The signature
+string <code>'vif'</code> corresponds to:</p>
+<ul>
+<li><code>v</code>: <code>void</code> (return type)</li>
+<li><code>i</code>: <code>int</code> / pointer (first argument:
+<code>worldPtr</code>)</li>
+<li><code>f</code>: <code>float</code> (second argument:
+<code>timeStep</code>)</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> callbackPointer <span class="op">=</span> Ammo<span class="op">.</span><span class="fu">addFunction</span>(myTickCallback<span class="op">,</span> <span class="st">&#39;vif&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="3-register-the-callback-with-the-dynamics-world">3. Register the
+Callback with the Dynamics World</h3>
+<p>Pass the wrapped function pointer to your dynamics world.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Register as a post-tick callback (runs after each physics substep)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>dynamicsWorld<span class="op">.</span><span class="fu">setInternalTickCallback</span>(callbackPointer<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="kw">false</span>)<span class="op">;</span></span></code></pre></div>
+<p>If you need the logic to run before the physics engine calculates
+collisions and forces for that substep, set the third parameter to
+<code>true</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Register as a pre-tick callback (runs before each physics substep)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>dynamicsWorld<span class="op">.</span><span class="fu">setInternalTickCallback</span>(callbackPointer<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="cleaning-up">Cleaning Up</h2>
+<p>To prevent memory leaks when destroying your physics world or
+changing scenes, you should free the allocated Emscripten function
+pointer:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Remove the callback from the world</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dynamicsWorld<span class="op">.</span><span class="fu">setInternalTickCallback</span>(<span class="kw">null</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Free the function pointer from Emscripten memory</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>Ammo<span class="op">.</span><span class="fu">removeFunction</span>(callbackPointer)<span class="op">;</span></span></code></pre></div></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

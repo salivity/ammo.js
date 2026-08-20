@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R4Y4YXFHZS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-R4Y4YXFHZS');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steering Input for ammo.js btRaycastVehicle - ammo.js</title>
+    <meta name="description" content="Controlling a vehicle in a 3D physics engine requires translating keyboard or controller inputs into precise wheel angles. This article explains how to correctly handle steering input for a btRaycastVehicle in ammo.js, covering the API methods, clamping">
+    <link rel="canonical" href="https://salivity.github.io/ammo.js/article/steering-input-for-ammo-js-btraycastvehicle">
+    <link rel="icon" href="/ammo.js/favicon.ico">
+    <link rel="stylesheet" href="/ammo.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/ammo.js/css/print.css">
+    <script src="/ammo.js/js/fuse.min.js"></script>
+    <script src="/ammo.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Steering Input for ammo.js btRaycastVehicle - ammo.js" />
+    <meta property="og:url" content="https://salivity.github.io/ammo.js/article/steering-input-for-ammo-js-btraycastvehicle" />
+    <meta property="og:image:url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/ammo.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Controlling a vehicle in a 3D physics engine requires translating keyboard or controller inputs into precise wheel angles. This article explains how to correctly handle steering input for a btRaycastVehicle in ammo.js, covering the API methods, clamping" />
+    <link rel="manifest" href="/ammo.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/ammo.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>ammo.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="https://github.com/salivity" title="Github" aria-label="Go To Github Profile Page"><svg class="svg-icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27"></path></svg></a></li>
+                <li><a href="/ammo.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article><h1 id="steering-input-for-ammojs-btraycastvehicle">Steering Input for
+ammo.js btRaycastVehicle</h1>
+<p>Controlling a vehicle in a 3D physics engine requires translating
+keyboard or controller inputs into precise wheel angles. This article
+explains how to correctly handle steering input for a
+<code>btRaycastVehicle</code> in ammo.js, covering the API methods,
+clamping maximum steering angles, and implementing smooth
+return-to-center behavior.</p>
+<h2 id="the-core-api-method">The Core API Method</h2>
+<p>In ammo.js, steering is applied on a per-wheel basis using the
+<code>setSteeringValue</code> method of the
+<code>btRaycastVehicle</code> instance. This method takes two
+arguments:</p>
+<ol type="1">
+<li><strong>Steering Value (float):</strong> The angle of the wheel in
+radians.</li>
+<li><strong>Wheel Index (int):</strong> The index of the wheel to apply
+the steering to (typically <code>0</code> and <code>1</code> for the
+front wheels).</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply steering to the front wheels</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> frontLeftWheel <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> frontRightWheel <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">setSteeringValue</span>(steeringValue<span class="op">,</span> frontLeftWheel)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>vehicle<span class="op">.</span><span class="fu">setSteeringValue</span>(steeringValue<span class="op">,</span> frontRightWheel)<span class="op">;</span></span></code></pre></div>
+<h2 id="implementing-smooth-steering-and-re-centering">Implementing
+Smooth Steering and Re-centering</h2>
+<p>Directly mapping input (like a key press) to the maximum steering
+angle causes the vehicle to turn instantly, which looks unrealistic and
+can cause the physics engine to lose stability. Instead, you should
+incrementally increase the steering angle when input is detected, and
+smoothly decay it back to zero when there is no input.</p>
+<p>Here is a complete, step-by-step implementation for a standard
+physics update loop:</p>
+<h3 id="1-define-steering-variables">1. Define Steering Variables</h3>
+<p>Establish limits and speed constants for your vehicle's steering
+behavior.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> vehicleSteering <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span>          <span class="co">// Current steering angle</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxSteeringVal <span class="op">=</span> <span class="fl">0.6</span><span class="op">;</span>         <span class="co">// Maximum steering angle in radians (approx. 34 degrees)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> steeringSpeed <span class="op">=</span> <span class="fl">1.5</span><span class="op">;</span>          <span class="co">// How fast the wheels turn (rads per second)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> steeringClamp <span class="op">=</span> <span class="fl">0.6</span><span class="op">;</span>          <span class="co">// Hard limit for safety</span></span></code></pre></div>
+<h3 id="2-update-steering-in-the-game-loop">2. Update Steering in the
+Game Loop</h3>
+<p>In your update loop, check the state of your inputs (e.g., keyboard
+keys or gamepad axes), calculate the new steering angle based on delta
+time, and apply the values to the steerable wheels.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">updateVehicleSteering</span>(deltaTime<span class="op">,</span> inputs) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Inputs should be booleans indicating if a key is pressed</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> leftPressed <span class="op">=</span> inputs<span class="op">.</span><span class="at">left</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> rightPressed <span class="op">=</span> inputs<span class="op">.</span><span class="at">right</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Increment or decrement steering based on input</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (leftPressed) {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (vehicleSteering <span class="op">&lt;</span> maxSteeringVal) {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            vehicleSteering <span class="op">+=</span> steeringSpeed <span class="op">*</span> deltaTime<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (rightPressed) {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (vehicleSteering <span class="op">&gt;</span> <span class="op">-</span>maxSteeringVal) {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            vehicleSteering <span class="op">-=</span> steeringSpeed <span class="op">*</span> deltaTime<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Return to center when no keys are pressed</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (vehicleSteering <span class="op">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            vehicleSteering <span class="op">-=</span> steeringSpeed <span class="op">*</span> deltaTime<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (vehicleSteering <span class="op">&lt;</span> <span class="dv">0</span>) vehicleSteering <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">else</span> <span class="cf">if</span> (vehicleSteering <span class="op">&lt;</span> <span class="dv">0</span>) {</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            vehicleSteering <span class="op">+=</span> steeringSpeed <span class="op">*</span> deltaTime<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (vehicleSteering <span class="op">&gt;</span> <span class="dv">0</span>) vehicleSteering <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clamp the final value to prevent physics glitching</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    vehicleSteering <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="op">-</span>steeringClamp<span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(steeringClamp<span class="op">,</span> vehicleSteering))<span class="op">;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply the steering value to the front wheels (usually indices 0 and 1)</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    vehicle<span class="op">.</span><span class="fu">setSteeringValue</span>(vehicleSteering<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    vehicle<span class="op">.</span><span class="fu">setSteeringValue</span>(vehicleSteering<span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="crucial-considerations">Crucial Considerations</h2>
+<ul>
+<li><strong>Wheel Indexing:</strong> Ensure your steerable wheels are at
+indices <code>0</code> and <code>1</code>. This depends entirely on the
+order in which you added the wheels to the vehicle using
+<code>vehicle.addWheel()</code>.</li>
+<li><strong>Physics Step Compatibility:</strong> Always multiply your
+steering speed by the delta time (<code>deltaTime</code>) of the physics
+step. This ensures that steering speed remains consistent regardless of
+the frame rate.</li>
+</ul></article>
+        <div id=comments-container></div>
+
+        <script>
+            const utterancesScript = document.createElement('script');
+            
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/ammo.js'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            utterancesScript.setAttribute('theme', localStorage.getItem('theme') === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="/ammo.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/ammo.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>
